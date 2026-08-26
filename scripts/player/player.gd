@@ -94,6 +94,14 @@ func take_corruption(amount: int = 1) -> void:
 	_start_immunity()
 
 
+# Called by fall-detection hazards. Reuses the same respawn sequence as
+# SOUL depletion, without treating falling as corruption damage.
+func fall_reset() -> void:
+	if is_respawning:
+		return
+	_begin_respawn_sequence()
+
+
 # Central entry point for anything that should restore the player's SOUL.
 # Clamped to MAX_SOUL; only emits soul_changed if SOUL actually changed.
 func restore_soul(amount: int = 1) -> void:

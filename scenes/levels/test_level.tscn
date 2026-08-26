@@ -1,9 +1,10 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/enemies/ghost_hunter.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/items/good_spirit_orb.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/items/bad_spirit_orb.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/items/checkpoint.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/items/end_portal.tscn" id="5"]
 
 [sub_resource type="RectangleShape2D" id="GroundShape"]
 size = Vector2(4800, 100)
@@ -13,6 +14,9 @@ size = Vector2(300, 40)
 
 [sub_resource type="RectangleShape2D" id="PlatformShape250"]
 size = Vector2(250, 40)
+
+[sub_resource type="RectangleShape2D" id="PlatformShape220"]
+size = Vector2(220, 40)
 
 [node name="TestLevel" type="Node2D"]
 
@@ -60,6 +64,16 @@ shape = SubResource("PlatformShape300")
 color = Color(0.32, 0.29, 0.36, 1)
 polygon = PackedVector2Array(-150, -20, 150, -20, 150, 20, -150, 20)
 
+[node name="Platform3B" type="StaticBody2D" parent="."]
+position = Vector2(2605, 720)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform3B"]
+shape = SubResource("PlatformShape250")
+
+[node name="Visual" type="Polygon2D" parent="Platform3B"]
+color = Color(0.32, 0.29, 0.36, 1)
+polygon = PackedVector2Array(-125, -20, 125, -20, 125, 20, -125, 20)
+
 [node name="Platform4" type="StaticBody2D" parent="."]
 position = Vector2(3150, 650)
 
@@ -67,6 +81,36 @@ position = Vector2(3150, 650)
 shape = SubResource("PlatformShape300")
 
 [node name="Visual" type="Polygon2D" parent="Platform4"]
+color = Color(0.32, 0.29, 0.36, 1)
+polygon = PackedVector2Array(-150, -20, 150, -20, 150, 20, -150, 20)
+
+[node name="Platform5" type="StaticBody2D" parent="."]
+position = Vector2(3580, 610)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform5"]
+shape = SubResource("PlatformShape220")
+
+[node name="Visual" type="Polygon2D" parent="Platform5"]
+color = Color(0.32, 0.29, 0.36, 1)
+polygon = PackedVector2Array(-110, -20, 110, -20, 110, 20, -110, 20)
+
+[node name="Platform6" type="StaticBody2D" parent="."]
+position = Vector2(4100, 490)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform6"]
+shape = SubResource("PlatformShape220")
+
+[node name="Visual" type="Polygon2D" parent="Platform6"]
+color = Color(0.32, 0.29, 0.36, 1)
+polygon = PackedVector2Array(-110, -20, 110, -20, 110, 20, -110, 20)
+
+[node name="Platform7" type="StaticBody2D" parent="."]
+position = Vector2(4550, 450)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform7"]
+shape = SubResource("PlatformShape300")
+
+[node name="Visual" type="Polygon2D" parent="Platform7"]
 color = Color(0.32, 0.29, 0.36, 1)
 polygon = PackedVector2Array(-150, -20, 150, -20, 150, 20, -150, 20)
 
@@ -90,3 +134,6 @@ position = Vector2(2150, 730)
 
 [node name="GoodSpiritOrb3" parent="." instance=ExtResource("2")]
 position = Vector2(3150, 600)
+
+[node name="EndPortal" parent="." instance=ExtResource("5")]
+position = Vector2(4550, 430)

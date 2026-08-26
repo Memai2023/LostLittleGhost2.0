@@ -1,0 +1,238 @@
+[gd_scene load_steps=18 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/ghost_hunter.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/items/good_spirit_orb.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/items/bad_spirit_orb.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/items/checkpoint.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/items/end_portal.tscn" id="5"]
+[ext_resource type="Script" path="res://scripts/systems/fall_zone.gd" id="6"]
+
+[sub_resource type="RectangleShape2D" id="GroundShape3600"]
+size = Vector2(3600, 100)
+
+[sub_resource type="RectangleShape2D" id="GroundShape920"]
+size = Vector2(920, 100)
+
+[sub_resource type="RectangleShape2D" id="GroundShape1720"]
+size = Vector2(1720, 100)
+
+[sub_resource type="RectangleShape2D" id="GroundShape410"]
+size = Vector2(410, 100)
+
+[sub_resource type="RectangleShape2D" id="GroundShape700"]
+size = Vector2(700, 100)
+
+[sub_resource type="RectangleShape2D" id="GroundShape500"]
+size = Vector2(500, 100)
+
+[sub_resource type="RectangleShape2D" id="PlatformShape220"]
+size = Vector2(220, 40)
+
+[sub_resource type="RectangleShape2D" id="PlatformShape300"]
+size = Vector2(300, 40)
+
+[sub_resource type="RectangleShape2D" id="HurdleShape"]
+size = Vector2(36, 70)
+
+[sub_resource type="RectangleShape2D" id="FallZoneShape"]
+size = Vector2(10600, 300)
+
+[node name="MainLevel" type="Node2D"]
+
+[node name="Graveyard" type="Node2D" parent="."]
+
+[node name="Background" type="Polygon2D" parent="Graveyard"]
+z_index = -10
+color = Color(0.04, 0.06, 0.16, 1)
+polygon = PackedVector2Array(0, -500, 3070, -500, 3070, 1450, 0, 1450)
+
+[node name="AreaLabel" type="Label" parent="Graveyard"]
+position = Vector2(50, -250)
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "GRAVEYARD"
+
+[node name="GroundPiece1" type="StaticBody2D" parent="Graveyard"]
+position = Vector2(1800, 950)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Graveyard/GroundPiece1"]
+shape = SubResource("GroundShape3600")
+
+[node name="Visual" type="Polygon2D" parent="Graveyard/GroundPiece1"]
+color = Color(0.32, 0.35, 0.4, 1)
+polygon = PackedVector2Array(-1800, -50, 1800, -50, 1800, 50, -1800, 50)
+
+[node name="Hurdle1" type="StaticBody2D" parent="Graveyard"]
+position = Vector2(700, 865)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Graveyard/Hurdle1"]
+shape = SubResource("HurdleShape")
+
+[node name="Visual" type="Polygon2D" parent="Graveyard/Hurdle1"]
+color = Color(0.3, 0.27, 0.34, 1)
+polygon = PackedVector2Array(-18, -35, 18, -35, 18, 35, -18, 35)
+
+[node name="GoodSpiritOrb1" parent="Graveyard" instance=ExtResource("2")]
+position = Vector2(1150, 860)
+
+[node name="DoubleJumpTeachPlatform" type="StaticBody2D" parent="Graveyard"]
+position = Vector2(1700, 800)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Graveyard/DoubleJumpTeachPlatform"]
+shape = SubResource("PlatformShape220")
+
+[node name="Visual" type="Polygon2D" parent="Graveyard/DoubleJumpTeachPlatform"]
+color = Color(0.32, 0.29, 0.36, 1)
+polygon = PackedVector2Array(-110, -20, 110, -20, 110, 20, -110, 20)
+
+[node name="GhostHunter" parent="Graveyard" instance=ExtResource("1")]
+position = Vector2(2400, 850)
+patrol_speed = 70.0
+patrol_distance = 110.0
+
+[node name="Checkpoint1" parent="Graveyard" instance=ExtResource("4")]
+position = Vector2(2950, 880)
+
+[node name="HauntedWoods" type="Node2D" parent="."]
+
+[node name="Background" type="Polygon2D" parent="HauntedWoods"]
+z_index = -10
+color = Color(0.1, 0.04, 0.14, 1)
+polygon = PackedVector2Array(3070, -500, 6150, -500, 6150, 1450, 3070, 1450)
+
+[node name="AreaLabel" type="Label" parent="HauntedWoods"]
+position = Vector2(3120, -250)
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "HAUNTED WOODS"
+
+[node name="WoodsB" type="StaticBody2D" parent="HauntedWoods"]
+position = Vector2(4240, 950)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedWoods/WoodsB"]
+shape = SubResource("GroundShape920")
+
+[node name="Visual" type="Polygon2D" parent="HauntedWoods/WoodsB"]
+color = Color(0.24, 0.3, 0.28, 1)
+polygon = PackedVector2Array(-460, -50, 460, -50, 460, 50, -460, 50)
+
+[node name="BadSpiritOrb1" parent="HauntedWoods" instance=ExtResource("3")]
+position = Vector2(4100, 780)
+
+[node name="GhostHunter" parent="HauntedWoods" instance=ExtResource("1")]
+position = Vector2(4240, 850)
+patrol_speed = 110.0
+patrol_distance = 100.0
+
+[node name="WoodsBonusPlatform" type="StaticBody2D" parent="HauntedWoods"]
+position = Vector2(4550, 820)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedWoods/WoodsBonusPlatform"]
+shape = SubResource("PlatformShape220")
+
+[node name="Visual" type="Polygon2D" parent="HauntedWoods/WoodsBonusPlatform"]
+color = Color(0.32, 0.29, 0.36, 1)
+polygon = PackedVector2Array(-110, -20, 110, -20, 110, 20, -110, 20)
+
+[node name="GroundPiece3" type="StaticBody2D" parent="HauntedWoods"]
+position = Vector2(5840, 830)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedWoods/GroundPiece3"]
+shape = SubResource("GroundShape1720")
+
+[node name="Visual" type="Polygon2D" parent="HauntedWoods/GroundPiece3"]
+color = Color(0.24, 0.3, 0.28, 1)
+polygon = PackedVector2Array(-860, -50, 860, -50, 860, 50, -860, 50)
+
+[node name="GoodSpiritOrb1" parent="HauntedWoods" instance=ExtResource("2")]
+position = Vector2(5300, 740)
+
+[node name="Checkpoint2" parent="HauntedWoods" instance=ExtResource("4")]
+position = Vector2(6080, 760)
+
+[node name="HauntedHouseGrounds" type="Node2D" parent="."]
+
+[node name="Background" type="Polygon2D" parent="HauntedHouseGrounds"]
+z_index = -10
+color = Color(0.16, 0.08, 0.11, 1)
+polygon = PackedVector2Array(6150, -500, 10200, -500, 10200, 1450, 6150, 1450)
+
+[node name="AreaLabel" type="Label" parent="HauntedHouseGrounds"]
+position = Vector2(6200, -250)
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "HAUNTED HOUSE GROUNDS"
+
+[node name="GroundsB" type="StaticBody2D" parent="HauntedHouseGrounds"]
+position = Vector2(7095, 780)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedHouseGrounds/GroundsB"]
+shape = SubResource("GroundShape410")
+
+[node name="Visual" type="Polygon2D" parent="HauntedHouseGrounds/GroundsB"]
+color = Color(0.34, 0.24, 0.28, 1)
+polygon = PackedVector2Array(-205, -50, 205, -50, 205, 50, -205, 50)
+
+[node name="BadSpiritOrb1" parent="HauntedHouseGrounds" instance=ExtResource("3")]
+position = Vector2(7050, 690)
+
+[node name="GhostHunter" parent="HauntedHouseGrounds" instance=ExtResource("1")]
+position = Vector2(7095, 680)
+patrol_speed = 130.0
+patrol_distance = 100.0
+
+[node name="FloatingPlat1" type="StaticBody2D" parent="HauntedHouseGrounds"]
+position = Vector2(7690, 630)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedHouseGrounds/FloatingPlat1"]
+shape = SubResource("PlatformShape220")
+
+[node name="Visual" type="Polygon2D" parent="HauntedHouseGrounds/FloatingPlat1"]
+color = Color(0.32, 0.29, 0.36, 1)
+polygon = PackedVector2Array(-110, -20, 110, -20, 110, 20, -110, 20)
+
+[node name="GroundsC" type="StaticBody2D" parent="HauntedHouseGrounds"]
+position = Vector2(8330, 780)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedHouseGrounds/GroundsC"]
+shape = SubResource("GroundShape700")
+
+[node name="Visual" type="Polygon2D" parent="HauntedHouseGrounds/GroundsC"]
+color = Color(0.34, 0.24, 0.28, 1)
+polygon = PackedVector2Array(-350, -50, 350, -50, 350, 50, -350, 50)
+
+[node name="GoodSpiritOrbFinal" parent="HauntedHouseGrounds" instance=ExtResource("2")]
+position = Vector2(8300, 690)
+
+[node name="GroundsD" type="StaticBody2D" parent="HauntedHouseGrounds"]
+position = Vector2(9120, 750)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedHouseGrounds/GroundsD"]
+shape = SubResource("GroundShape500")
+
+[node name="Visual" type="Polygon2D" parent="HauntedHouseGrounds/GroundsD"]
+color = Color(0.34, 0.24, 0.28, 1)
+polygon = PackedVector2Array(-250, -50, 250, -50, 250, 50, -250, 50)
+
+[node name="FinalPlatform" type="StaticBody2D" parent="HauntedHouseGrounds"]
+position = Vector2(9800, 600)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedHouseGrounds/FinalPlatform"]
+shape = SubResource("PlatformShape300")
+
+[node name="Visual" type="Polygon2D" parent="HauntedHouseGrounds/FinalPlatform"]
+color = Color(0.32, 0.29, 0.36, 1)
+polygon = PackedVector2Array(-150, -20, 150, -20, 150, 20, -150, 20)
+
+[node name="EndPortal" parent="HauntedHouseGrounds" instance=ExtResource("5")]
+position = Vector2(9800, 580)
+
+[node name="FallZone" type="Area2D" parent="."]
+position = Vector2(4975, 1300)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("6")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FallZone"]
+shape = SubResource("FallZoneShape")

@@ -1,0 +1,32 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/end_screen.gd" id="1"]
+
+[node name="EndScreen" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1")
+
+[node name="FadeRect" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="ContentCenter" type="CenterContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="ContentBox" type="VBoxContainer" parent="ContentCenter"]
+visible = false
+alignment = 1
+theme_override_constants/separation = 28
+
+[node name="TitleLabel" type="Label" parent="ContentCenter/ContentBox"]
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 40
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "HOME AT LAST\n\nStill a good ghost."
+
+[node name="PlayAgainButton" type="Button" parent="ContentCenter/ContentBox"]
+custom_minimum_size = Vector2(200, 56)
+text = "Play Again"
