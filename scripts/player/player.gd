@@ -11,6 +11,9 @@ signal soul_depleted
 @export var max_fall_speed: float = 500.0
 @export var hit_immunity_duration: float = 1.0
 @export var respawn_delay: float = 1.0
+@export var idle_pose_delay: float = 0.5
+@export var side_texture: Texture2D
+@export var front_texture: Texture2D
 
 const MAX_JUMPS := 2
 const MAX_SOUL := 3
@@ -19,12 +22,21 @@ const PLAYER_COLLISION_LAYER := 2
 const NORMAL_TINT := Color(1, 1, 1, 1)
 const RESPAWN_TINT := Color(0.45, 0.12, 0.55, 0.6)
 
+# Per-pose visual alignment so each PNG's own transparent padding lines up
+# with the same collision-shape bottom (y=19) and horizontal center (x=0).
+const SIDE_SCALE := Vector2(0.31, 0.31)
+const SIDE_POSITION := Vector2(0, -9.3)
+const FRONT_SCALE := Vector2(0.297, 0.297)
+const FRONT_POSITION := Vector2(-0.15, -11.0)
+
 var jump_count := 0
 var soul: int = MAX_SOUL
 var is_immune: bool = false
 var is_respawning: bool = false
 var respawn_position: Vector2
 var facing_direction: int = 1
+var idle_timer: float = 0.0
+var is_using_front_pose: bool = false
 
 
 func _ready() -> void:
@@ -51,6 +63,8 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor():
 		jump_count = 0
 
+	_update_visual_pose(delta)
+
 
 func _apply_gravity(delta: float) -> void:
 	if not is_on_floor():
@@ -70,9 +84,44 @@ func _handle_horizontal_movement(delta: float) -> void:
 	if direction != 0.0:
 		velocity.x = move_toward(velocity.x, direction * move_speed, acceleration * delta)
 		facing_direction = 1 if direction > 0.0 else -1
-		$GoodGhostSprite.flip_h = facing_direction < 0
 	else:
 		velocity.x = move_toward(velocity.x, 0.0, deceleration * delta)
+
+
+# Chooses between the side (moving/airborne) and front (idle-on-ground) poses.
+# Idle time only accumulates while grounded and not moving, so brief pauses
+# while changing direction never reach the delay and never flicker.
+func _update_visual_pose(delta: float) -> void:
+	var moving_horizontally := Input.get_axis("move_left", "move_right") != 0.0
+	var airborne := not is_on_floor()
+
+	if moving_horizontally or airborne:
+		idle_timer = 0.0
+		_apply_side_pose()
+	else:
+		idle_timer += delta
+		if idle_timer >= idle_pose_delay:
+			_apply_front_pose()
+		else:
+			_apply_side_pose()
+
+
+func _apply_side_pose() -> void:
+	if is_using_front_pose:
+		is_using_front_pose = false
+		$GoodGhostSprite.texture = side_texture
+		$GoodGhostSprite.scale = SIDE_SCALE
+		$GoodGhostSprite.position = SIDE_POSITION
+	$GoodGhostSprite.flip_h = facing_direction < 0
+
+
+func _apply_front_pose() -> void:
+	if not is_using_front_pose:
+		is_using_front_pose = true
+		$GoodGhostSprite.texture = front_texture
+		$GoodGhostSprite.scale = FRONT_SCALE
+		$GoodGhostSprite.position = FRONT_POSITION
+	$GoodGhostSprite.flip_h = false
 
 
 # Called by checkpoints to update where the player will respawn.
@@ -167,5 +216,8 @@ func _on_respawn_timer_timeout() -> void:
 	collision_layer = PLAYER_COLLISION_LAYER
 	is_immune = false
 	is_respawning = false
+
+	idle_timer = 0.0
+	_apply_side_pose()
 
 	$Camera2D.reset_smoothing()
