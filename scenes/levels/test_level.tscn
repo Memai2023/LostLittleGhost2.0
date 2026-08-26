@@ -1,6 +1,8 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/enemies/ghost_hunter.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/items/good_spirit_orb.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/items/bad_spirit_orb.tscn" id="3"]
 
 [sub_resource type="RectangleShape2D" id="GroundShape"]
 size = Vector2(4800, 100)
@@ -69,3 +71,18 @@ polygon = PackedVector2Array(-150, -20, 150, -20, 150, 20, -150, 20)
 
 [node name="GhostHunter" parent="." instance=ExtResource("1")]
 position = Vector2(2600, 850)
+
+[node name="GoodSpiritOrb1" parent="." instance=ExtResource("2")]
+position = Vector2(500, 860)
+
+[node name="BadSpiritOrb1" parent="." instance=ExtResource("3")]
+position = Vector2(750, 700)
+
+[node name="GoodSpiritOrb2" parent="." instance=ExtResource("2")]
+position = Vector2(1425, 570)
+
+[node name="BadSpiritOrb2" parent="." instance=ExtResource("3")]
+position = Vector2(2150, 730)
+
+[node name="GoodSpiritOrb3" parent="." instance=ExtResource("2")]
+position = Vector2(3150, 600)

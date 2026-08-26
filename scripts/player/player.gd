@@ -74,6 +74,17 @@ func take_corruption(amount: int = 1) -> void:
 	_start_immunity()
 
 
+# Central entry point for anything that should restore the player's SOUL.
+# Clamped to MAX_SOUL; only emits soul_changed if SOUL actually changed.
+func restore_soul(amount: int = 1) -> void:
+	var new_soul: int = min(soul + amount, MAX_SOUL)
+	if new_soul == soul:
+		return
+
+	soul = new_soul
+	soul_changed.emit(soul, MAX_SOUL)
+
+
 func _start_immunity() -> void:
 	is_immune = true
 	$HitFlashTimer.start()
