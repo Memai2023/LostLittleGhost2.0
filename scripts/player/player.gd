@@ -24,6 +24,7 @@ var soul: int = MAX_SOUL
 var is_immune: bool = false
 var is_respawning: bool = false
 var respawn_position: Vector2
+var facing_direction: int = 1
 
 
 func _ready() -> void:
@@ -68,6 +69,8 @@ func _handle_horizontal_movement(delta: float) -> void:
 
 	if direction != 0.0:
 		velocity.x = move_toward(velocity.x, direction * move_speed, acceleration * delta)
+		facing_direction = 1 if direction > 0.0 else -1
+		$GoodGhostSprite.flip_h = facing_direction < 0
 	else:
 		velocity.x = move_toward(velocity.x, 0.0, deceleration * delta)
 
@@ -125,12 +128,12 @@ func _start_immunity() -> void:
 func _on_immunity_timer_timeout() -> void:
 	is_immune = false
 	$HitFlashTimer.stop()
-	$Body.modulate.a = 1.0
+	$GoodGhostSprite.modulate.a = 1.0
 
 
 # Temporary hit feedback: blinks the player semi-transparent while immune.
 func _on_hit_flash_timer_timeout() -> void:
-	$Body.modulate.a = 0.4 if $Body.modulate.a >= 1.0 else 1.0
+	$GoodGhostSprite.modulate.a = 0.4 if $GoodGhostSprite.modulate.a >= 1.0 else 1.0
 
 
 # Begins the short Evil Ghost / respawn sequence once SOUL reaches zero.
@@ -147,7 +150,7 @@ func _begin_respawn_sequence() -> void:
 	velocity = Vector2.ZERO
 	collision_layer = 0
 
-	$Body.modulate = RESPAWN_TINT
+	$GoodGhostSprite.modulate = RESPAWN_TINT
 
 	$RespawnTimer.start()
 
@@ -160,7 +163,7 @@ func _on_respawn_timer_timeout() -> void:
 	soul = MAX_SOUL
 	soul_changed.emit(soul, MAX_SOUL)
 
-	$Body.modulate = NORMAL_TINT
+	$GoodGhostSprite.modulate = NORMAL_TINT
 	collision_layer = PLAYER_COLLISION_LAYER
 	is_immune = false
 	is_respawning = false
