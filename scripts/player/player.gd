@@ -10,12 +10,16 @@ signal soul_depleted
 @export var gravity: float = 900.0
 @export var max_fall_speed: float = 500.0
 @export var hit_immunity_duration: float = 1.0
-@export var respawn_delay: float = 1.0
+# Also doubles as the death-pose display duration: the existing respawn
+# freeze already covers "show a pose, then teleport", so no second timer
+# is needed to satisfy the ~0.8s death-pose requirement.
+@export var respawn_delay: float = 0.8
 @export var idle_pose_delay: float = 0.5
 @export var good_orb_reaction_duration: float = 0.7
 @export var side_texture: Texture2D
 @export var front_texture: Texture2D
 @export var holding_orb_texture: Texture2D
+@export var dead_texture: Texture2D
 
 const MAX_JUMPS := 2
 const MAX_SOUL := 3
@@ -32,10 +36,13 @@ const FRONT_SCALE := Vector2(0.297, 0.297)
 const FRONT_POSITION := Vector2(-0.15, -11.0)
 const HOLDING_ORB_SCALE := Vector2(0.29, 0.29)
 const HOLDING_ORB_POSITION := Vector2(-1.3, -10.0)
+const DEAD_SCALE := Vector2(0.323, 0.323)
+const DEAD_POSITION := Vector2(0.97, -11.65)
 
 const POSE_SIDE := "side"
 const POSE_FRONT := "front"
 const POSE_HOLDING_ORB := "holding_orb"
+const POSE_DEAD := "dead"
 
 var jump_count := 0
 var soul: int = MAX_SOUL
@@ -235,9 +242,9 @@ func _on_hit_flash_timer_timeout() -> void:
 	$GoodGhostSprite.modulate.a = 0.4 if $GoodGhostSprite.modulate.a >= 1.0 else 1.0
 
 
-# Begins the short Evil Ghost / respawn sequence once SOUL reaches zero.
-# Freezes movement, hides the player from hazard/orb detection, and plays a
-# simple placeholder corruption effect until the respawn timer fires.
+# Begins the short death / respawn sequence (SOUL depletion or falling).
+# Freezes movement, hides the player from hazard/orb detection, shows the
+# dead pose with a corruption tint, and teleports once the timer fires.
 func _begin_respawn_sequence() -> void:
 	if is_respawning:
 		return
@@ -252,6 +259,11 @@ func _begin_respawn_sequence() -> void:
 	velocity = Vector2.ZERO
 	collision_layer = 0
 
+	current_pose = POSE_DEAD
+	$GoodGhostSprite.texture = dead_texture
+	$GoodGhostSprite.scale = DEAD_SCALE
+	$GoodGhostSprite.position = DEAD_POSITION
+	$GoodGhostSprite.flip_h = false
 	$GoodGhostSprite.modulate = RESPAWN_TINT
 
 	$RespawnTimer.start()
