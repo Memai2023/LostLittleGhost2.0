@@ -29,3 +29,7 @@ one_shot = true
 
 [node name="HitFlashTimer" type="Timer" parent="."]
 wait_time = 0.1
+
+[node name="RespawnTimer" type="Timer" parent="."]
+wait_time = 1.0
+one_shot = true

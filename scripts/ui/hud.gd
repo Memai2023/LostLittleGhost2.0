@@ -29,7 +29,7 @@ func _on_player_soul_changed(current_soul: int, _max_soul: int) -> void:
 
 func _on_player_soul_depleted() -> void:
 	# TEMPORARY DEBUG: remove once a real Evil Ghost / game-over flow exists.
-	print("HUD: SOUL depleted — all Spirit Hearts corrupted (debug placeholder).")
+	print("HUD: SOUL depleted — respawn sequence starting.")
 
 
 func _update_hearts(current_soul: int) -> void:
