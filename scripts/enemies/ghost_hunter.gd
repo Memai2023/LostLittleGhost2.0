@@ -27,6 +27,7 @@ func _ready() -> void:
 	_build_flashlight_cone()
 	$Visuals/FlashlightPivot/DetectionArea.body_entered.connect(_on_detection_area_body_entered)
 	$Visuals/FlashlightPivot/DetectionArea.body_exited.connect(_on_detection_area_body_exited)
+	$Hurtbox.body_entered.connect(_on_hurtbox_body_entered)
 
 
 func _physics_process(delta: float) -> void:
@@ -78,6 +79,8 @@ func _on_detection_area_body_entered(body: Node2D) -> void:
 	player_in_cone = true
 	player_spotted.emit()
 	_set_debug_cone_color(true)
+	if body.has_method("take_corruption"):
+		body.take_corruption()
 
 
 func _on_detection_area_body_exited(body: Node2D) -> void:
@@ -86,6 +89,13 @@ func _on_detection_area_body_exited(body: Node2D) -> void:
 	player_in_cone = false
 	player_lost.emit()
 	_set_debug_cone_color(false)
+
+
+func _on_hurtbox_body_entered(body: Node2D) -> void:
+	if not body.is_in_group("player"):
+		return
+	if body.has_method("take_corruption"):
+		body.take_corruption()
 
 
 # ---------------------------------------------------------------------------

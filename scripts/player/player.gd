@@ -1,15 +1,28 @@
 extends CharacterBody2D
 
+signal soul_changed(current_soul: int, max_soul: int)
+signal soul_depleted
+
 @export var move_speed: float = 320.0
 @export var acceleration: float = 1800.0
 @export var deceleration: float = 1200.0
 @export var jump_velocity: float = -420.0
 @export var gravity: float = 900.0
 @export var max_fall_speed: float = 500.0
+@export var hit_immunity_duration: float = 1.0
 
 const MAX_JUMPS := 2
+const MAX_SOUL := 3
 
 var jump_count := 0
+var soul: int = MAX_SOUL
+var is_immune: bool = false
+
+
+func _ready() -> void:
+	$ImmunityTimer.wait_time = hit_immunity_duration
+	$ImmunityTimer.timeout.connect(_on_immunity_timer_timeout)
+	$HitFlashTimer.timeout.connect(_on_hit_flash_timer_timeout)
 
 
 func _physics_process(delta: float) -> void:
@@ -42,3 +55,37 @@ func _handle_horizontal_movement(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, direction * move_speed, acceleration * delta)
 	else:
 		velocity.x = move_toward(velocity.x, 0.0, deceleration * delta)
+
+
+# Central entry point for any hazard that should corrupt the player's SOUL.
+# Ignored while immune or once SOUL has already reached zero.
+func take_corruption(amount: int = 1) -> void:
+	if is_immune or soul <= 0:
+		return
+
+	soul = max(soul - amount, 0)
+	soul_changed.emit(soul, MAX_SOUL)
+
+	if soul <= 0:
+		soul_depleted.emit()
+		# TEMPORARY DEBUG: remove once Evil Ghost transformation / game over exists.
+		print("SOUL depleted — Little Ghost has become an Evil Ghost (debug placeholder).")
+
+	_start_immunity()
+
+
+func _start_immunity() -> void:
+	is_immune = true
+	$HitFlashTimer.start()
+	$ImmunityTimer.start()
+
+
+func _on_immunity_timer_timeout() -> void:
+	is_immune = false
+	$HitFlashTimer.stop()
+	$Body.modulate.a = 1.0
+
+
+# Temporary hit feedback: blinks the player semi-transparent while immune.
+func _on_hit_flash_timer_timeout() -> void:
+	$Body.modulate.a = 0.4 if $Body.modulate.a >= 1.0 else 1.0
