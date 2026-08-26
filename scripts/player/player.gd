@@ -12,8 +12,10 @@ signal soul_depleted
 @export var hit_immunity_duration: float = 1.0
 @export var respawn_delay: float = 1.0
 @export var idle_pose_delay: float = 0.5
+@export var good_orb_reaction_duration: float = 0.7
 @export var side_texture: Texture2D
 @export var front_texture: Texture2D
+@export var holding_orb_texture: Texture2D
 
 const MAX_JUMPS := 2
 const MAX_SOUL := 3
@@ -28,6 +30,12 @@ const SIDE_SCALE := Vector2(0.31, 0.31)
 const SIDE_POSITION := Vector2(0, -9.3)
 const FRONT_SCALE := Vector2(0.297, 0.297)
 const FRONT_POSITION := Vector2(-0.15, -11.0)
+const HOLDING_ORB_SCALE := Vector2(0.29, 0.29)
+const HOLDING_ORB_POSITION := Vector2(-1.3, -10.0)
+
+const POSE_SIDE := "side"
+const POSE_FRONT := "front"
+const POSE_HOLDING_ORB := "holding_orb"
 
 var jump_count := 0
 var soul: int = MAX_SOUL
@@ -36,7 +44,8 @@ var is_respawning: bool = false
 var respawn_position: Vector2
 var facing_direction: int = 1
 var idle_timer: float = 0.0
-var is_using_front_pose: bool = false
+var current_pose: String = POSE_SIDE
+var is_showing_good_orb_reaction: bool = false
 
 
 func _ready() -> void:
@@ -48,6 +57,9 @@ func _ready() -> void:
 
 	$RespawnTimer.wait_time = respawn_delay
 	$RespawnTimer.timeout.connect(_on_respawn_timer_timeout)
+
+	$GoodOrbReactionTimer.wait_time = good_orb_reaction_duration
+	$GoodOrbReactionTimer.timeout.connect(_on_good_orb_reaction_timer_timeout)
 
 
 func _physics_process(delta: float) -> void:
@@ -91,7 +103,12 @@ func _handle_horizontal_movement(delta: float) -> void:
 # Chooses between the side (moving/airborne) and front (idle-on-ground) poses.
 # Idle time only accumulates while grounded and not moving, so brief pauses
 # while changing direction never reach the delay and never flicker.
+# Skipped entirely while the Good Orb reaction pose is active, so the
+# ordinary idle logic can never replace it before its timer finishes.
 func _update_visual_pose(delta: float) -> void:
+	if is_showing_good_orb_reaction:
+		return
+
 	var moving_horizontally := Input.get_axis("move_left", "move_right") != 0.0
 	var airborne := not is_on_floor()
 
@@ -107,8 +124,8 @@ func _update_visual_pose(delta: float) -> void:
 
 
 func _apply_side_pose() -> void:
-	if is_using_front_pose:
-		is_using_front_pose = false
+	if current_pose != POSE_SIDE:
+		current_pose = POSE_SIDE
 		$GoodGhostSprite.texture = side_texture
 		$GoodGhostSprite.scale = SIDE_SCALE
 		$GoodGhostSprite.position = SIDE_POSITION
@@ -116,12 +133,45 @@ func _apply_side_pose() -> void:
 
 
 func _apply_front_pose() -> void:
-	if not is_using_front_pose:
-		is_using_front_pose = true
+	if current_pose != POSE_FRONT:
+		current_pose = POSE_FRONT
 		$GoodGhostSprite.texture = front_texture
 		$GoodGhostSprite.scale = FRONT_SCALE
 		$GoodGhostSprite.position = FRONT_POSITION
 	$GoodGhostSprite.flip_h = false
+
+
+# Called by Good Spirit Orbs on collection, regardless of whether SOUL was
+# actually restored. Temporarily overrides the idle pose without touching
+# movement; collecting another orb mid-reaction simply restarts the timer.
+func show_good_orb_reaction() -> void:
+	if is_respawning:
+		return
+
+	is_showing_good_orb_reaction = true
+	current_pose = POSE_HOLDING_ORB
+	$GoodGhostSprite.texture = holding_orb_texture
+	$GoodGhostSprite.scale = HOLDING_ORB_SCALE
+	$GoodGhostSprite.position = HOLDING_ORB_POSITION
+	$GoodGhostSprite.flip_h = false
+
+	$GoodOrbReactionTimer.start()
+
+
+func _on_good_orb_reaction_timer_timeout() -> void:
+	is_showing_good_orb_reaction = false
+
+	var moving_horizontally := Input.get_axis("move_left", "move_right") != 0.0
+	var airborne := not is_on_floor()
+
+	if moving_horizontally or airborne:
+		idle_timer = 0.0
+		_apply_side_pose()
+	else:
+		# Already past the idle threshold: show the front pose immediately
+		# rather than waiting through another idle delay.
+		idle_timer = idle_pose_delay
+		_apply_front_pose()
 
 
 # Called by checkpoints to update where the player will respawn.
@@ -195,6 +245,9 @@ func _begin_respawn_sequence() -> void:
 	is_respawning = true
 	is_immune = true
 	$HitFlashTimer.stop()
+
+	is_showing_good_orb_reaction = false
+	$GoodOrbReactionTimer.stop()
 
 	velocity = Vector2.ZERO
 	collision_layer = 0
