@@ -1,4 +1,6 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/ghost_hunter.tscn" id="1"]
 
 [sub_resource type="RectangleShape2D" id="GroundShape"]
 size = Vector2(4800, 100)
@@ -64,3 +66,6 @@ shape = SubResource("PlatformShape300")
 [node name="Visual" type="Polygon2D" parent="Platform4"]
 color = Color(0.32, 0.29, 0.36, 1)
 polygon = PackedVector2Array(-150, -20, 150, -20, 150, 20, -150, 20)
+
+[node name="GhostHunter" parent="." instance=ExtResource("1")]
+position = Vector2(2600, 850)
