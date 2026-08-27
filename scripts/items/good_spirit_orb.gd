@@ -29,4 +29,7 @@ func _on_body_entered(body: Node2D) -> void:
 	if body.has_method("restore_soul"):
 		body.restore_soul()
 
+	if body.has_method("show_good_orb_reaction"):
+		body.show_good_orb_reaction()
+
 	queue_free()
