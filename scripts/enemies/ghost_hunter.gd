@@ -23,15 +23,30 @@ const DEBUG_CONE_COLOR_DETECTED := Color(1.0, 0.2, 0.2, 0.55)
 # Per-frame lantern position, in Visuals-local space, measured from each
 # source frame's own lit-flame pixel cluster (all 6 frames hold the lantern
 # in the same hand, so these stay closely clustered rather than flipping
-# sides like the old 3-frame set did). Scaled by 1.2x to match the
-# AnimatedSprite2D's new 0.096 scale (was 0.08) -- these are measured in
-# Visuals-local space, which grows with the sprite's own scale.
-const LANTERN_OFFSET_IDLE_A := Vector2(23.64, -24.36)
-const LANTERN_OFFSET_IDLE_B := Vector2(32.16, -24.6)
-const LANTERN_OFFSET_WALK_A := Vector2(33.6, -25.8)
-const LANTERN_OFFSET_WALK_B := Vector2(32.04, -23.88)
-const LANTERN_OFFSET_WALK_C := Vector2(36.72, -24.24)
-const LANTERN_OFFSET_WALK_D := Vector2(35.04, -23.64)
+# sides like the old 3-frame set did). Y is derived from each frame's own
+# SPRITE_Y_* ground-alignment below (not a flat -35) -- the two are
+# calibrated together since both come from the same AnimatedSprite2D
+# transform.
+const LANTERN_OFFSET_IDLE_A := Vector2(23.59, -25.12)
+const LANTERN_OFFSET_IDLE_B := Vector2(32.15, -26.92)
+const LANTERN_OFFSET_WALK_A := Vector2(33.55, -28.36)
+const LANTERN_OFFSET_WALK_B := Vector2(32.04, -27.19)
+const LANTERN_OFFSET_WALK_C := Vector2(36.77, -27.32)
+const LANTERN_OFFSET_WALK_D := Vector2(34.99, -28.86)
+
+# Per-frame AnimatedSprite2D.position.y, in Visuals-local space. Each source
+# frame has different padding, so its own ground-contact row (the boots --
+# measured via a row-density threshold that ignores stray single-pixel cape
+# wisps) sits at a different pixel Y. This aligns that row to the
+# CollisionShape2D's bottom edge (position (0,-35), size (32,66) -> bottom
+# = -35+33 = -2), so the hunter's feet land on the ground it's standing on
+# instead of sinking in or floating, regardless of which frame is showing.
+const SPRITE_Y_IDLE_A := -42.8
+const SPRITE_Y_IDLE_B := -44.3
+const SPRITE_Y_WALK_A := -44.6
+const SPRITE_Y_WALK_B := -45.3
+const SPRITE_Y_WALK_C := -45.1
+const SPRITE_Y_WALK_D := -47.2
 
 var start_position: Vector2
 var direction: int = 1
@@ -56,6 +71,7 @@ func _physics_process(delta: float) -> void:
 
 	_update_facing()
 	_update_animation()
+	_update_sprite_ground_alignment()
 	_update_lantern_position()
 
 
@@ -105,6 +121,23 @@ func _update_animation() -> void:
 	var target_animation: StringName = &"walk" if absf(velocity.x) > 0.1 else &"idle"
 	if $Visuals/AnimatedSprite2D.animation != target_animation:
 		$Visuals/AnimatedSprite2D.play(target_animation)
+
+
+# Keeps the currently-showing frame's own boots on the ground, since each
+# of the 6 source frames has different padding around the character (see
+# SPRITE_Y_* above).
+func _update_sprite_ground_alignment() -> void:
+	var sprite: AnimatedSprite2D = $Visuals/AnimatedSprite2D
+	var y: float
+	if sprite.animation == &"walk":
+		match sprite.frame:
+			0: y = SPRITE_Y_WALK_A
+			1: y = SPRITE_Y_WALK_B
+			2: y = SPRITE_Y_WALK_C
+			_: y = SPRITE_Y_WALK_D
+	else:
+		y = SPRITE_Y_IDLE_B if sprite.frame == 1 else SPRITE_Y_IDLE_A
+	sprite.position.y = y
 
 
 # Moves the (shared) flashlight pivot and lantern glow to match the

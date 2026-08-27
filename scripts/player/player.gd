@@ -47,23 +47,25 @@ const STEALTH_TINT := Color(0.6, 0.85, 1.0, 0.4)
 
 # Per-pose visual alignment so each PNG's own transparent padding lines up
 # with the same collision-shape bottom (y=19) and horizontal center (x=0).
-# Y values carry a uniform +2.5 offset (vs. the original alpha-bbox-derived
-# alignment) so the visual reads as standing closer to the platform surface
-# it's on -- collision (CollisionShape2D, still bottom at y=19) is untouched.
+# Y values carry a deliberate -10 hover (vs. the original alpha-bbox
+# "touching" alignment, y=19): the ghost is meant to float above whatever
+# it's standing on, unlike the ground-hugging Ghost Hunter. Collision
+# (CollisionShape2D, still bottom at y=19) is untouched -- this is visual
+# only.
 const SIDE_SCALE := Vector2(0.31, 0.31)
-const SIDE_POSITION := Vector2(0, -6.8)
+const SIDE_POSITION := Vector2(0, -19.3)
 const FRONT_SCALE := Vector2(0.297, 0.297)
-const FRONT_POSITION := Vector2(-0.15, -8.5)
+const FRONT_POSITION := Vector2(-0.15, -21.0)
 const HOLDING_ORB_SCALE := Vector2(0.29, 0.29)
-const HOLDING_ORB_POSITION := Vector2(-1.3, -7.5)
+const HOLDING_ORB_POSITION := Vector2(-1.3, -20.0)
 const DEAD_SCALE := Vector2(0.323, 0.323)
-const DEAD_POSITION := Vector2(0.97, -9.15)
+const DEAD_POSITION := Vector2(0.97, -21.65)
 const EVIL_SCALE := Vector2(0.234, 0.234)
-const EVIL_POSITION := Vector2(1.52, -8.5)
+const EVIL_POSITION := Vector2(1.52, -21.0)
 const SURPRISE_SCALE := Vector2(0.302, 0.302)
-const SURPRISE_POSITION := Vector2(-0.15, -7.45)
+const SURPRISE_POSITION := Vector2(-0.15, -19.95)
 const CRYING_SCALE := Vector2(0.151, 0.151)
-const CRYING_POSITION := Vector2(-0.6, -9.56)
+const CRYING_POSITION := Vector2(-0.6, -22.06)
 
 const POSE_SIDE := "side"
 const POSE_FRONT := "front"

@@ -1,9 +1,14 @@
 extends Node2D
 
 ## Drives all background layers from ONE shared normalized progress value
-## (camera position mapped 0.0-1.0 across the level), instead of Parallax2D's
-## independent per-layer scroll_scale. This keeps every layer showing the
-## same normalized position in its own source image at all times.
+## (camera position mapped 0.0-1.0 across the level) as their base position,
+## so they stay narratively synchronized (same normalized position in their
+## own source image) the way Parallax2D's independent per-layer scroll_scale
+## never could. On top of that shared base, each layer gets a small, tiny
+## differential scroll-speed offset (far_scroll_speed / mid_scroll_speed /
+## near_scroll_speed below) for an actual parallax depth cue -- real
+## differential speed, just kept small enough that it can never desync the
+## layers by more than a few dozen pixels over the whole level.
 
 @export var camera_start_x: float = 200.0
 @export var camera_end_x: float = 9800.0
@@ -18,19 +23,27 @@ extends Node2D
 ## foreground band (measured starting at ~75% of image height).
 @export_range(0.0, 1.0) var vertical_anchor_fraction: float = 0.55
 
-## Bounded horizontal depth offsets, in rendered (post-scale) pixels, applied
-## on top of the shared synchronized progression -- NOT independent scroll
-## speeds. Far and Mid share a plain sin(PI * progress) timing; Near uses a
-## differently-shaped curve (see _process) so it doesn't peak at the same
-## moment as Mid. All three curves are 0 at progress=0 and progress=1
-## regardless of shape, so the graveyard-start and dawn/house-end scene sync
-## stays exact no matter how the amplitudes or easing above are tuned.
-## far_parallax_offset/mid_parallax_offset are each that layer's exact peak
-## offset (sin peaks at 1.0). near_parallax_offset is a coefficient, not the
-## peak directly, because its easing curve peaks below 1.0 -- see _process.
-@export var far_parallax_offset: float = 45.0
-@export var mid_parallax_offset: float = 165.0
-@export var near_parallax_offset: float = 144.0
+## Per-layer scroll speed as a multiplier of the shared base speed (1.0 =
+## moves exactly with the synchronized progression, same as Mid). This is
+## real differential-speed parallax, not a position-keyed wave: each
+## layer's extra offset grows/shrinks in direct, monotonic proportion to
+## how far the camera has actually traveled, so it only moves in response
+## to real player movement, never on its own, and never reverses unless the
+## player actually walks backward. The differences are kept tiny on
+## purpose -- over the full ~9600-unit level, even the largest gap here
+## (Far vs Near, 0.995 vs 1.005) only ever accumulates to about +-48px of
+## relative drift, comfortably inside "a few dozen pixels" of tolerated
+## scene desync. Mid stays the anchor (1.0, zero extra offset, always
+## exactly the shared position).
+@export var far_scroll_speed: float = 0.995
+@export var mid_scroll_speed: float = 1.005
+@export var near_scroll_speed: float = 1.010
+
+## Hard safety cap, in rendered pixels, on the extra per-layer offset below.
+## The speeds above already stay well under this over the level's actual
+## length; this just guarantees it can never grow unbounded even if the
+## level were extended later.
+@export var max_parallax_drift: float = 60.0
 
 @onready var _layers: Array[Sprite2D] = [
 	$FarLayer/FarSprite,
@@ -60,24 +73,19 @@ func _process(_delta: float) -> void:
 		(camera_pos.x - camera_start_x) / (camera_end_x - camera_start_x), 0.0, 1.0
 	)
 
-	# Centered bounded wave: 0 at progress=0 and progress=1 (perfect sync at
-	# the graveyard start and the dawn/house end), peaking at the level's
-	# midpoint (the forest). A function of progress alone -- never of
-	# elapsed camera travel -- so it can never exceed its amplitude or
-	# accumulate, unlike independent per-layer scroll speeds.
-	# Far and Mid share this plain wave -- same timing, different amplitude.
-	var parallax_wave: float = sin(PI * progress)
-	# Near uses a differently-shaped curve: the same sine, biased to grow
-	# stronger later (0.65 at the start of the level, 1.0 at the end), which
-	# shifts its peak past the midpoint and gives it a distinct "catching up"
-	# motion instead of breathing in lockstep with Mid. Still 0 at both ends
-	# because the sine factor alone already forces that.
-	var near_wave: float = parallax_wave * (0.65 + 0.35 * progress)
-	var offsets: Array[float] = [
-		-far_parallax_offset * parallax_wave,
-		mid_parallax_offset * parallax_wave,
-		near_parallax_offset * near_wave,
-	]
+	# Real differential-speed parallax: "distance traveled through the
+	# level" (progress, already clamped to the level's own bounds so it
+	# can't run away if the player wanders past either end), times each
+	# layer's own tiny speed difference from the shared base. This is a
+	# monotonic function of actual camera displacement -- not of absolute
+	# position via a wave -- so a layer only moves while the player is
+	# actually moving, holds still the instant they stop, and only reverses
+	# if the player genuinely walks back the other way.
+	var traveled: float = progress * (camera_end_x - camera_start_x)
+	var speeds: Array[float] = [far_scroll_speed, mid_scroll_speed, near_scroll_speed]
+	var offsets: Array[float] = []
+	for speed in speeds:
+		offsets.append(clampf(traveled * (speed - 1.0), -max_parallax_drift, max_parallax_drift))
 
 	for i in _layers.size():
 		var sprite: Sprite2D = _layers[i]

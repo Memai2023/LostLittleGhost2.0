@@ -75,13 +75,13 @@ color = Color(0.15, 0.13, 0.18, 1)
 polygon = PackedVector2Array(-18, -20, -18, -55, -12, -66, -4, -70, 4, -70, 12, -66, 18, -55, 18, -20, 18, 0, -18, 0)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Visuals"]
-position = Vector2(0, -35)
+position = Vector2(0, -42.8)
 scale = Vector2(0.096, 0.096)
 sprite_frames = SubResource("SpriteFrames_1")
 animation = &"idle"
 
 [node name="FlashlightPivot" type="Node2D" parent="Visuals"]
-position = Vector2(19.7, -20.3)
+position = Vector2(23.59, -25.12)
 
 [node name="Cone" type="Polygon2D" parent="Visuals/FlashlightPivot"]
 material = SubResource("ShaderMaterial_1")
@@ -95,7 +95,7 @@ monitorable = false
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Visuals/FlashlightPivot/DetectionArea"]
 
 [node name="LanternGlow" type="Node2D" parent="Visuals"]
-position = Vector2(19.7, -20.3)
+position = Vector2(23.59, -25.12)
 
 [node name="Outer" type="Polygon2D" parent="Visuals/LanternGlow"]
 color = Color(1, 0.75, 0.4, 0.18)
