@@ -17,19 +17,21 @@ const MAX_FALL_SPEED := 500.0
 # TEMPORARY DEBUG FEEDBACK — these two colors only exist to make detection
 # visible during development. Remove once real gameplay feedback (SOUL /
 # damage) replaces them in a later step.
-const DEBUG_CONE_COLOR_IDLE := Color(1.0, 0.95, 0.6, 0.75)
+const DEBUG_CONE_COLOR_IDLE := Color(1.0, 0.95, 0.6, 0.4)
 const DEBUG_CONE_COLOR_DETECTED := Color(1.0, 0.2, 0.2, 0.55)
 
 # Per-frame lantern position, in Visuals-local space, measured from each
 # source frame's own lit-flame pixel cluster (all 6 frames hold the lantern
 # in the same hand, so these stay closely clustered rather than flipping
-# sides like the old 3-frame set did).
-const LANTERN_OFFSET_IDLE_A := Vector2(19.7, -20.3)
-const LANTERN_OFFSET_IDLE_B := Vector2(26.8, -20.5)
-const LANTERN_OFFSET_WALK_A := Vector2(28.0, -21.5)
-const LANTERN_OFFSET_WALK_B := Vector2(26.7, -19.9)
-const LANTERN_OFFSET_WALK_C := Vector2(30.6, -20.2)
-const LANTERN_OFFSET_WALK_D := Vector2(29.2, -19.7)
+# sides like the old 3-frame set did). Scaled by 1.2x to match the
+# AnimatedSprite2D's new 0.096 scale (was 0.08) -- these are measured in
+# Visuals-local space, which grows with the sprite's own scale.
+const LANTERN_OFFSET_IDLE_A := Vector2(23.64, -24.36)
+const LANTERN_OFFSET_IDLE_B := Vector2(32.16, -24.6)
+const LANTERN_OFFSET_WALK_A := Vector2(33.6, -25.8)
+const LANTERN_OFFSET_WALK_B := Vector2(32.04, -23.88)
+const LANTERN_OFFSET_WALK_C := Vector2(36.72, -24.24)
+const LANTERN_OFFSET_WALK_D := Vector2(35.04, -23.64)
 
 var start_position: Vector2
 var direction: int = 1

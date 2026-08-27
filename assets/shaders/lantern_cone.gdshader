@@ -20,12 +20,13 @@ void fragment() {
 	float dist_t = clamp(local_pos.x / max(cone_length, 1.0), 0.0, 1.0);
 	float half_width_at_x = max((cone_width * 0.5) * dist_t, 0.001);
 	float edge_t = abs(local_pos.y) / half_width_at_x;
-	// The cone now stays at full strength across most of its length/width --
-	// length only starts fading in the outer 30%, sides only in the outer
-	// 20% -- so it reads as a solidly-defined danger area with just a thin
-	// feathered rim, rather than a gradient across its whole extent.
-	float edge_fade = 1.0 - smoothstep(0.8, 1.0, edge_t);
-	float length_fade = 1.0 - smoothstep(0.7, 1.0, dist_t);
+	// Minimal gradient: the cone is essentially flat (constant alpha) across
+	// 90% of its length and width, with only a thin, crisp feather in the
+	// outer 10% so the far/side edges read as clearly defined rather than
+	// gradually dissolving. Combined with a lower base warm_color alpha,
+	// this gives a low/moderate-opacity, clearly-bounded danger area.
+	float edge_fade = 1.0 - smoothstep(0.9, 1.0, edge_t);
+	float length_fade = 1.0 - smoothstep(0.9, 1.0, dist_t);
 	float alpha = length_fade * edge_fade;
 	COLOR = vec4(warm_color.rgb, alpha * warm_color.a);
 }
