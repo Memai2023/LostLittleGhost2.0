@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/characters/ghost/ghost_good_idle_right.png" id="2"]
@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" path="res://assets/characters/ghost/ghost_good_dead.png" id="5"]
 [ext_resource type="Texture2D" path="res://assets/characters/ghost/ghost_evil.png" id="6"]
 [ext_resource type="Texture2D" path="res://assets/characters/ghost/ghost_surprise.png" id="7"]
+[ext_resource type="Texture2D" path="res://assets/characters/ghost/ghost_crying.png" id="8"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(36, 58)
@@ -21,6 +22,7 @@ holding_orb_texture = ExtResource("4")
 dead_texture = ExtResource("5")
 evil_texture = ExtResource("6")
 surprise_texture = ExtResource("7")
+crying_texture = ExtResource("8")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -10)
@@ -52,9 +54,9 @@ wait_time = 0.7
 one_shot = true
 
 [node name="EvilGhostTimer" type="Timer" parent="."]
-wait_time = 0.8
+wait_time = 3.0
 one_shot = true
 
-[node name="SurpriseTimer" type="Timer" parent="."]
+[node name="CryingTimer" type="Timer" parent="."]
 wait_time = 0.5
 one_shot = true

@@ -17,14 +17,15 @@ enum RespawnCause { SOUL_CORRUPTION, FALL_DEATH }
 @export var idle_pose_delay: float = 0.5
 @export var good_orb_reaction_duration: float = 0.7
 # Evil Ghost display duration for SOUL_CORRUPTION only.
-@export var evil_pose_duration: float = 0.8
-@export var surprise_pose_duration: float = 0.5
+@export var evil_pose_duration: float = 3.0
+@export var crying_pose_duration: float = 0.5
 @export var side_texture: Texture2D
 @export var front_texture: Texture2D
 @export var holding_orb_texture: Texture2D
 @export var dead_texture: Texture2D
 @export var evil_texture: Texture2D
 @export var surprise_texture: Texture2D
+@export var crying_texture: Texture2D
 
 const MAX_JUMPS := 2
 const MAX_SOUL := 3
@@ -47,6 +48,8 @@ const EVIL_SCALE := Vector2(0.234, 0.234)
 const EVIL_POSITION := Vector2(1.52, -11.0)
 const SURPRISE_SCALE := Vector2(0.302, 0.302)
 const SURPRISE_POSITION := Vector2(-0.15, -9.95)
+const CRYING_SCALE := Vector2(0.151, 0.151)
+const CRYING_POSITION := Vector2(-0.6, -12.06)
 
 const POSE_SIDE := "side"
 const POSE_FRONT := "front"
@@ -54,6 +57,7 @@ const POSE_HOLDING_ORB := "holding_orb"
 const POSE_DEAD := "dead"
 const POSE_EVIL := "evil"
 const POSE_SURPRISE := "surprise"
+const POSE_CRYING := "crying"
 
 var jump_count := 0
 var soul: int = MAX_SOUL
@@ -65,7 +69,7 @@ var facing_direction: int = 1
 var idle_timer: float = 0.0
 var current_pose: String = POSE_SIDE
 var is_showing_good_orb_reaction: bool = false
-var is_showing_surprise: bool = false
+var is_showing_crying: bool = false
 
 
 func _ready() -> void:
@@ -84,8 +88,8 @@ func _ready() -> void:
 	$EvilGhostTimer.wait_time = evil_pose_duration
 	$EvilGhostTimer.timeout.connect(_on_evil_ghost_timer_timeout)
 
-	$SurpriseTimer.wait_time = surprise_pose_duration
-	$SurpriseTimer.timeout.connect(_on_surprise_timer_timeout)
+	$CryingTimer.wait_time = crying_pose_duration
+	$CryingTimer.timeout.connect(_on_crying_timer_timeout)
 
 
 func _physics_process(delta: float) -> void:
@@ -126,25 +130,29 @@ func _handle_horizontal_movement(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0.0, deceleration * delta)
 
 
-# Chooses between the side (moving/airborne) and front (idle-on-ground) poses.
-# Idle time only accumulates while grounded and not moving, so brief pauses
-# while changing direction never reach the delay and never flicker.
+# Chooses the player's visual pose every frame. Idle time only accumulates
+# while grounded and not moving, so brief pauses while changing direction
+# never reach the delay and never flicker.
 #
 # Priority order (highest to lowest):
 #   1. Evil Ghost / Dead Ghost   -- enforced above this function, via the
 #      is_respawning gate in _physics_process, which skips this call entirely.
-#   2. Surprise pose             -- is_showing_surprise
-#   3. Good Orb holding reaction -- is_showing_good_orb_reaction
-#   4. Airborne / directional movement
-#   5. Front-facing idle
+#   2. Crying (valid Ghost Hunter / Bad Orb hit) -- is_showing_crying
+#   3. Good Orb holding reaction                 -- is_showing_good_orb_reaction
+#   4. Surprise while jumping or falling         -- airborne
+#   5. Directional side pose while moving on the ground
+#   6. Front-facing idle pose
 func _update_visual_pose(delta: float) -> void:
-	if is_showing_surprise or is_showing_good_orb_reaction:
+	if is_showing_crying or is_showing_good_orb_reaction:
 		return
 
 	var moving_horizontally := Input.get_axis("move_left", "move_right") != 0.0
 	var airborne := not is_on_floor()
 
-	if moving_horizontally or airborne:
+	if airborne:
+		idle_timer = 0.0
+		_apply_surprise_pose()
+	elif moving_horizontally:
 		idle_timer = 0.0
 		_apply_side_pose()
 	else:
@@ -173,11 +181,24 @@ func _apply_front_pose() -> void:
 	$GoodGhostSprite.flip_h = false
 
 
+# The airborne (jump/fall) pose. Treated as a centered/front-facing
+# expression rather than a directional one, matching how it was already
+# drawn — flip_h stays false regardless of facing direction.
+func _apply_surprise_pose() -> void:
+	if current_pose != POSE_SURPRISE:
+		current_pose = POSE_SURPRISE
+		$GoodGhostSprite.texture = surprise_texture
+		$GoodGhostSprite.scale = SURPRISE_SCALE
+		$GoodGhostSprite.position = SURPRISE_POSITION
+	$GoodGhostSprite.flip_h = false
+
+
 # Called by Good Spirit Orbs on collection, regardless of whether SOUL was
-# actually restored. Ranks below an active Surprise pose (a hit reaction
-# should not be interrupted by a pickup), and never starts during respawn.
+# actually restored. Ranks below Crying (a hit reaction should not be
+# interrupted by a pickup) but above Surprise, so collecting an orb while
+# airborne still shows the holding-orb reaction.
 func show_good_orb_reaction() -> void:
-	if is_respawning or is_showing_surprise:
+	if is_respawning or is_showing_crying:
 		return
 
 	is_showing_good_orb_reaction = true
@@ -192,45 +213,50 @@ func show_good_orb_reaction() -> void:
 
 func _on_good_orb_reaction_timer_timeout() -> void:
 	is_showing_good_orb_reaction = false
-	_restore_idle_or_movement_pose()
+	_restore_pose_for_current_state()
 
 
 # Called from take_corruption() for a hit that actually removes a Spirit
-# Heart without depleting SOUL. Cancels any Good Orb reaction in progress
-# and takes priority over ordinary movement/idle pose updates until its
-# timer ends. Does not touch movement, immunity, or flashing — those are
+# Heart without depleting SOUL (Ghost Hunter body/flashlight, or a Bad
+# Spirit Orb -- the game design treats Bad Orb contact as "the same hit
+# feedback as other hazards"). Cancels any Good Orb reaction in progress
+# and outranks ordinary movement/idle/jump pose updates until its timer
+# ends. Does not touch movement, immunity, or flashing -- those are
 # handled separately by the caller.
-func show_surprise_reaction() -> void:
+func show_crying_reaction() -> void:
 	if is_respawning:
 		return
 
 	is_showing_good_orb_reaction = false
 	$GoodOrbReactionTimer.stop()
 
-	is_showing_surprise = true
-	current_pose = POSE_SURPRISE
-	$GoodGhostSprite.texture = surprise_texture
-	$GoodGhostSprite.scale = SURPRISE_SCALE
-	$GoodGhostSprite.position = SURPRISE_POSITION
+	is_showing_crying = true
+	current_pose = POSE_CRYING
+	$GoodGhostSprite.texture = crying_texture
+	$GoodGhostSprite.scale = CRYING_SCALE
+	$GoodGhostSprite.position = CRYING_POSITION
 	$GoodGhostSprite.flip_h = false
 
-	$SurpriseTimer.start()
+	$CryingTimer.start()
 
 
-func _on_surprise_timer_timeout() -> void:
-	is_showing_surprise = false
-	_restore_idle_or_movement_pose()
+func _on_crying_timer_timeout() -> void:
+	is_showing_crying = false
+	_restore_pose_for_current_state()
 
 
-# Shared by both the Good Orb reaction and the Surprise pose when their
-# timers end: pick the correct normal pose immediately based on the
-# player's state at that instant, rather than waiting through another
-# idle delay.
-func _restore_idle_or_movement_pose() -> void:
+# Shared by both the Good Orb reaction and the Crying reaction when their
+# timers end: pick the correct pose immediately based on the player's
+# state at that instant (airborne -> Surprise, moving -> side, still ->
+# front) rather than waiting through another idle delay.
+func _restore_pose_for_current_state() -> void:
 	var moving_horizontally := Input.get_axis("move_left", "move_right") != 0.0
 	var airborne := not is_on_floor()
 
-	if moving_horizontally or airborne:
+	if airborne:
+		idle_timer = 0.0
+		_apply_surprise_pose()
+	elif moving_horizontally:
 		idle_timer = 0.0
 		_apply_side_pose()
 	else:
@@ -253,13 +279,13 @@ func take_corruption(amount: int = 1) -> void:
 	soul_changed.emit(soul, MAX_SOUL)
 
 	if soul <= 0:
-		# The third heart: skip Surprise entirely and go straight to the
+		# The third heart: skip Crying entirely and go straight to the
 		# Evil Ghost sequence, which takes priority over everything else.
 		soul_depleted.emit()
 		_begin_corruption_respawn_sequence()
 		return
 
-	show_surprise_reaction()
+	show_crying_reaction()
 	_start_immunity()
 
 
@@ -302,15 +328,15 @@ func _on_immunity_timer_timeout() -> void:
 
 
 # Temporary hit feedback: blinks the player semi-transparent while immune.
-# Applies to whichever texture is currently active, including Surprise.
+# Applies to whichever texture is currently active, including Crying.
 func _on_hit_flash_timer_timeout() -> void:
 	$GoodGhostSprite.modulate.a = 0.4 if $GoodGhostSprite.modulate.a >= 1.0 else 1.0
 
 
 # Shared setup for both respawn causes: freezes movement, disables further
 # damage, hides the player from hazard/orb detection, and cancels any
-# in-progress Good Orb or Surprise reaction. Does not choose a pose or
-# start a timer — callers do that afterward, since SOUL_CORRUPTION and
+# in-progress Good Orb or Crying reaction. Does not choose a pose or
+# start a timer -- callers do that afterward, since SOUL_CORRUPTION and
 # FALL_DEATH show different pre-respawn sequences.
 func _freeze_for_respawn() -> void:
 	is_respawning = true
@@ -320,8 +346,8 @@ func _freeze_for_respawn() -> void:
 	is_showing_good_orb_reaction = false
 	$GoodOrbReactionTimer.stop()
 
-	is_showing_surprise = false
-	$SurpriseTimer.stop()
+	is_showing_crying = false
+	$CryingTimer.stop()
 
 	velocity = Vector2.ZERO
 	collision_layer = 0
@@ -329,7 +355,8 @@ func _freeze_for_respawn() -> void:
 
 # SOUL reaching zero through corruption: Good Ghost -> Evil Ghost -> Respawn
 # -> Good Ghost. The dead pose is never shown for this cause. Evil Ghost is
-# shown at full color/opacity so it stays clearly visible (no dead-pose tint).
+# shown at full color/opacity so it stays clearly visible (no dead-pose tint),
+# and goes straight to the final reset once its timer ends -- no extra delay.
 func _begin_corruption_respawn_sequence() -> void:
 	if is_respawning:
 		return
