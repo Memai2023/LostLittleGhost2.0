@@ -19,6 +19,8 @@ enum RespawnCause { SOUL_CORRUPTION, FALL_DEATH }
 # Evil Ghost display duration for SOUL_CORRUPTION only.
 @export var evil_pose_duration: float = 3.0
 @export var crying_pose_duration: float = 0.5
+# How long a Transparent Caster pickup's stealth effect lasts.
+@export var stealth_duration: float = 4.5
 @export var side_texture: Texture2D
 @export var front_texture: Texture2D
 @export var holding_orb_texture: Texture2D
@@ -31,8 +33,17 @@ const MAX_JUMPS := 2
 const MAX_SOUL := 3
 const PLAYER_COLLISION_LAYER := 2
 
+# This is primarily a horizontal platformer: the camera should track the
+# player's X position but stay at one deliberate vertical framing at all
+# times, rather than following normal jump/fall/elevation-change movement.
+# Chosen so the player sits comfortably below center at the graveyard spawn
+# (Y=850), while the level's full ground-height range (~580-950) stays
+# framed with margin at both ends.
+const CAMERA_FIXED_Y := 740.0
+
 const NORMAL_TINT := Color(1, 1, 1, 1)
 const RESPAWN_TINT := Color(0.45, 0.12, 0.55, 0.6)
+const STEALTH_TINT := Color(0.6, 0.85, 1.0, 0.4)
 
 # Per-pose visual alignment so each PNG's own transparent padding lines up
 # with the same collision-shape bottom (y=19) and horizontal center (x=0).
@@ -70,6 +81,7 @@ var idle_timer: float = 0.0
 var current_pose: String = POSE_SIDE
 var is_showing_good_orb_reaction: bool = false
 var is_showing_crying: bool = false
+var is_stealthed: bool = false
 
 
 func _ready() -> void:
@@ -91,9 +103,13 @@ func _ready() -> void:
 	$CryingTimer.wait_time = crying_pose_duration
 	$CryingTimer.timeout.connect(_on_crying_timer_timeout)
 
+	$StealthTimer.wait_time = stealth_duration
+	$StealthTimer.timeout.connect(_on_stealth_timer_timeout)
+
 
 func _physics_process(delta: float) -> void:
 	if is_respawning:
+		_lock_camera_vertical()
 		return
 
 	_apply_gravity(delta)
@@ -105,7 +121,17 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor():
 		jump_count = 0
 
+	_lock_camera_vertical()
 	_update_visual_pose(delta)
+
+
+# Holds the camera's global Y at CAMERA_FIXED_Y by offsetting its local
+# position against the player's current Y each frame, regardless of jumping,
+# falling, or ground-height changes across the level. Horizontal following
+# is untouched -- the camera's local X stays at 0 and inherits normal
+# parent-following + smoothing, exactly as before.
+func _lock_camera_vertical() -> void:
+	$Camera2D.position.y = CAMERA_FIXED_Y - global_position.y
 
 
 func _apply_gravity(delta: float) -> void:
@@ -269,6 +295,28 @@ func set_respawn_position(new_respawn_position: Vector2) -> void:
 	respawn_position = new_respawn_position
 
 
+# Called by Transparent Caster pickups. Makes the ghost undetectable to
+# Ghost Hunters (and, as a side effect, to orbs/checkpoints/fall death, the
+# same way the existing respawn-immunity window already works) by reusing
+# that same collision_layer = 0 pattern -- no Ghost Hunter script is
+# touched. Picking up a second caster while already stealthed simply
+# restarts the timer rather than stacking.
+func activate_stealth() -> void:
+	if is_respawning:
+		return
+
+	is_stealthed = true
+	collision_layer = 0
+	$GoodGhostSprite.modulate = STEALTH_TINT
+	$StealthTimer.start()
+
+
+func _on_stealth_timer_timeout() -> void:
+	is_stealthed = false
+	collision_layer = PLAYER_COLLISION_LAYER
+	$GoodGhostSprite.modulate = NORMAL_TINT
+
+
 # Central entry point for any hazard that should corrupt the player's SOUL.
 # Ignored while immune, already depleted, or already respawning.
 func take_corruption(amount: int = 1) -> void:
@@ -296,9 +344,22 @@ func fall_reset() -> void:
 		return
 
 	respawn_cause = RespawnCause.FALL_DEATH
+	_apply_fall_corruption()
 	_freeze_for_respawn()
 	_show_dead_pose()
 	$RespawnTimer.start()
+
+
+# Falling applies the same SOUL consequence as a hazard hit, reusing
+# take_corruption()'s soul bookkeeping and soul_changed emission (so the HUD
+# updates the same way) -- but always keeps the FALL_DEATH pose/respawn path
+# above rather than take_corruption()'s own Crying/Evil Ghost reactions.
+func _apply_fall_corruption() -> void:
+	if soul <= 0:
+		return
+
+	soul = max(soul - 1, 0)
+	soul_changed.emit(soul, MAX_SOUL)
 
 
 # Central entry point for anything that should restore the player's SOUL.

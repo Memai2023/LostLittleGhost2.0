@@ -1,9 +1,53 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/ghost_hunter.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/enemies/ghosthunter/gh-idle-a.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/enemies/ghosthunter/gh-idle-b.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/enemies/ghosthunter/gh-walk-a.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/enemies/ghosthunter/gh-walk-b.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/enemies/ghosthunter/gh-walk-c.png" id="7"]
+[ext_resource type="Texture2D" path="res://assets/enemies/ghosthunter/gh-walk-d.png" id="8"]
+[ext_resource type="Shader" path="res://assets/shaders/lantern_cone.gdshader" id="5"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(32, 66)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
+shader = ExtResource("5")
+shader_parameter/cone_length = 260.0
+shader_parameter/cone_width = 160.0
+shader_parameter/warm_color = Color(1, 0.95, 0.6, 0.75)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_1"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 3.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 7.0
+}]
 
 [node name="GhostHunter" type="CharacterBody2D"]
 collision_layer = 4
@@ -26,19 +70,22 @@ shape = SubResource("RectangleShape2D_1")
 [node name="Visuals" type="Node2D" parent="."]
 
 [node name="Body" type="Polygon2D" parent="Visuals"]
+visible = false
 color = Color(0.15, 0.13, 0.18, 1)
 polygon = PackedVector2Array(-18, -20, -18, -55, -12, -66, -4, -70, 4, -70, 12, -66, 18, -55, 18, -20, 18, 0, -18, 0)
 
-[node name="FacingMarker" type="Polygon2D" parent="Visuals"]
-color = Color(0.9, 0.85, 0.6, 1)
-position = Vector2(20, -55)
-polygon = PackedVector2Array(6, 0, 4.24, -4.24, 0, -6, -4.24, -4.24, -6, 0, -4.24, 4.24, 0, 6, 4.24, 4.24)
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Visuals"]
+position = Vector2(0, -35)
+scale = Vector2(0.08, 0.08)
+sprite_frames = SubResource("SpriteFrames_1")
+animation = &"idle"
 
 [node name="FlashlightPivot" type="Node2D" parent="Visuals"]
-position = Vector2(0, -50)
+position = Vector2(19.7, -20.3)
 
 [node name="Cone" type="Polygon2D" parent="Visuals/FlashlightPivot"]
-color = Color(1, 0.95, 0.6, 0.35)
+material = SubResource("ShaderMaterial_1")
+color = Color(1, 0.95, 0.6, 0.75)
 
 [node name="DetectionArea" type="Area2D" parent="Visuals/FlashlightPivot"]
 collision_layer = 0
@@ -46,3 +93,14 @@ collision_mask = 2
 monitorable = false
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Visuals/FlashlightPivot/DetectionArea"]
+
+[node name="LanternGlow" type="Node2D" parent="Visuals"]
+position = Vector2(19.7, -20.3)
+
+[node name="Outer" type="Polygon2D" parent="Visuals/LanternGlow"]
+color = Color(1, 0.75, 0.4, 0.18)
+polygon = PackedVector2Array(20, 0, 14.14, 14.14, 0, 20, -14.14, 14.14, -20, 0, -14.14, -14.14, 0, -20, 14.14, -14.14)
+
+[node name="Inner" type="Polygon2D" parent="Visuals/LanternGlow"]
+color = Color(1, 0.88, 0.6, 0.4)
+polygon = PackedVector2Array(9, 0, 6.36, 6.36, 0, 9, -6.36, 6.36, -9, 0, -6.36, -6.36, 0, -9, 6.36, -6.36)

@@ -60,3 +60,7 @@ one_shot = true
 [node name="CryingTimer" type="Timer" parent="."]
 wait_time = 0.5
 one_shot = true
+
+[node name="StealthTimer" type="Timer" parent="."]
+wait_time = 4.5
+one_shot = true
