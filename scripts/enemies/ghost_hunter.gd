@@ -17,7 +17,7 @@ const MAX_FALL_SPEED := 500.0
 # TEMPORARY DEBUG FEEDBACK — these two colors only exist to make detection
 # visible during development. Remove once real gameplay feedback (SOUL /
 # damage) replaces them in a later step.
-const DEBUG_CONE_COLOR_IDLE := Color(1.0, 0.95, 0.6, 0.4)
+const DEBUG_CONE_COLOR_IDLE := Color(1.0, 0.95, 0.6, 1.0)
 const DEBUG_CONE_COLOR_DETECTED := Color(1.0, 0.2, 0.2, 0.55)
 
 # Per-frame lantern position, in Visuals-local space, measured from each
@@ -26,13 +26,14 @@ const DEBUG_CONE_COLOR_DETECTED := Color(1.0, 0.2, 0.2, 0.55)
 # sides like the old 3-frame set did). Y is derived from each frame's own
 # SPRITE_Y_* ground-alignment below (not a flat -35) -- the two are
 # calibrated together since both come from the same AnimatedSprite2D
-# transform.
-const LANTERN_OFFSET_IDLE_A := Vector2(23.59, -25.12)
-const LANTERN_OFFSET_IDLE_B := Vector2(32.15, -26.92)
-const LANTERN_OFFSET_WALK_A := Vector2(33.55, -28.36)
-const LANTERN_OFFSET_WALK_B := Vector2(32.04, -27.19)
-const LANTERN_OFFSET_WALK_C := Vector2(36.77, -27.32)
-const LANTERN_OFFSET_WALK_D := Vector2(34.99, -28.86)
+# transform. Recalibrated (same source measurements, scaled algebraically)
+# for the AnimatedSprite2D's current 0.105 scale.
+const LANTERN_OFFSET_IDLE_A := Vector2(25.80, -27.29)
+const LANTERN_OFFSET_IDLE_B := Vector2(35.16, -29.26)
+const LANTERN_OFFSET_WALK_A := Vector2(36.70, -30.83)
+const LANTERN_OFFSET_WALK_B := Vector2(35.04, -29.55)
+const LANTERN_OFFSET_WALK_C := Vector2(40.22, -29.69)
+const LANTERN_OFFSET_WALK_D := Vector2(38.27, -31.38)
 
 # Per-frame AnimatedSprite2D.position.y, in Visuals-local space. Each source
 # frame has different padding, so its own ground-contact row (the boots --
@@ -41,12 +42,14 @@ const LANTERN_OFFSET_WALK_D := Vector2(34.99, -28.86)
 # CollisionShape2D's bottom edge (position (0,-35), size (32,66) -> bottom
 # = -35+33 = -2), so the hunter's feet land on the ground it's standing on
 # instead of sinking in or floating, regardless of which frame is showing.
-const SPRITE_Y_IDLE_A := -42.8
-const SPRITE_Y_IDLE_B := -44.3
-const SPRITE_Y_WALK_A := -44.6
-const SPRITE_Y_WALK_B := -45.3
-const SPRITE_Y_WALK_C := -45.1
-const SPRITE_Y_WALK_D := -47.2
+# Recalibrated (same source measurements, scaled algebraically) for the
+# AnimatedSprite2D's current 0.105 scale.
+const SPRITE_Y_IDLE_A := -46.62
+const SPRITE_Y_IDLE_B := -48.27
+const SPRITE_Y_WALK_A := -48.59
+const SPRITE_Y_WALK_B := -49.36
+const SPRITE_Y_WALK_C := -49.14
+const SPRITE_Y_WALK_D := -51.44
 
 var start_position: Vector2
 var direction: int = 1

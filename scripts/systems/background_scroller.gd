@@ -26,9 +26,20 @@ extends Node2D
 ## than a specific landmark) to make sense clamped. It scrolls forever via
 ## two copies of its own texture placed edge-to-edge, wrapping which one
 ## leads as the camera moves -- genuinely continuous motion for the whole
-## level, at the cost of a visible seam once per texture-width cycle where
-## the Near texture's (currently bg-bottom.png) right edge meets its own
-## left edge (it isn't drawn as a seamless tile).
+## level.
+##
+## The Near texture (bg-bottom.png) isn't a seamless tile -- its own right
+## edge doesn't match its own left edge -- but it IS painted with
+## approximate left-right mirror symmetry (matching branch/fence-post
+## clusters near both edges, confirmed by diffing the image against its
+## own horizontal flip). So instead of placing two identical copies (whose
+## meeting edges are unrelated content -> the visible seam), alternating
+## copies are horizontally flipped: every second tile shows the mirror
+## image, so each seam is between a normal edge and its own near-mirror
+## match rather than two arbitrary edges. Pure per-frame math (no history
+## tracking needed): a tile's flip state is fully determined by
+## floor(its own left edge / texture width), so it's always consistent
+## regardless of camera direction or speed.
 
 @export var camera_start_x: float = 200.0
 @export var camera_end_x: float = 9800.0
@@ -140,7 +151,11 @@ func _process(_delta: float) -> void:
 # near_scroll_scale > 1's negative depth_factor correctly too), covered by
 # two copies of the same texture placed edge-to-edge so the wrap point
 # itself never shows a gap -- one copy is always fully covering the
-# viewport, or handing off to the other mid-transition.
+# viewport, or handing off to the other mid-transition. Alternating tiles
+# are flip_h'd (see class doc) so each seam meets near-matching mirrored
+# content instead of an arbitrary edge -- flip_h only mirrors the drawn
+# content within each tile's rect, it doesn't move the rect itself, so this
+# is safe to add without touching any of the position math above.
 func _update_near(camera_pos: Vector2) -> void:
 	var base_x: float = camera_start_x - _viewport_size.x * 0.5
 	var desired_x: float = base_x + (camera_pos.x - camera_start_x) * _near_depth_factor
@@ -151,6 +166,10 @@ func _update_near(camera_pos: Vector2) -> void:
 
 	_near_sprite_a.global_position = Vector2(tile_left, y)
 	_near_sprite_b.global_position = Vector2(tile_left + _near_size.x, y)
+
+	var tile_index: int = floori(tile_left / _near_size.x)
+	_near_sprite_a.flip_h = posmod(tile_index, 2) == 1
+	_near_sprite_b.flip_h = posmod(tile_index + 1, 2) == 1
 
 
 # Detects a section-boundary crossing (in either direction) and re-anchors
