@@ -1,9 +1,14 @@
 extends CanvasLayer
 
-const HEART_COLOR_PURE := Color(0.85, 0.92, 1, 1)
-const HEART_COLOR_CORRUPTED := Color(0.5, 0.15, 0.55, 1)
+## Each heart slot holds two independently-sized TextureRects (Pure/Evil)
+## instead of one node swapping texture. state-pure.png and state-evil.png
+## have different content aspect ratios (1.465 vs 1.090), so fitting both
+## into one shared box via stretch_mode would render one visibly smaller
+## than the other -- each icon gets its own box sized to the same target
+## height instead, then toggled by visibility, so they read as the same
+## size regardless of which is currently shown.
 
-@onready var hearts: Array[ColorRect] = [
+@onready var hearts: Array[Node] = [
 	$Margin/SoulRow/Heart1,
 	$Margin/SoulRow/Heart2,
 	$Margin/SoulRow/Heart3,
@@ -34,4 +39,6 @@ func _on_player_soul_depleted() -> void:
 
 func _update_hearts(current_soul: int) -> void:
 	for i in hearts.size():
-		hearts[i].color = HEART_COLOR_PURE if i < current_soul else HEART_COLOR_CORRUPTED
+		var is_pure: bool = i < current_soul
+		hearts[i].get_node("Pure").visible = is_pure
+		hearts[i].get_node("Evil").visible = not is_pure

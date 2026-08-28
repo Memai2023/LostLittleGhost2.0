@@ -47,20 +47,26 @@ const STEALTH_TINT := Color(0.6, 0.85, 1.0, 0.4)
 
 # Per-pose visual alignment so each PNG's own transparent padding lines up
 # with the same collision-shape bottom (y=19) and horizontal center (x=0).
+# Y values carry a deliberate -4 hover (vs. the original alpha-bbox
+# "touching" alignment, y=19): the ghost is meant to float above whatever
+# it's standing on, unlike the ground-hugging Ghost Hunter, but sit close
+# enough to read as grounded rather than floaty (reduced from an earlier
+# -10 hover). Collision (CollisionShape2D, still bottom at y=19) is
+# untouched -- this is visual only.
 const SIDE_SCALE := Vector2(0.31, 0.31)
-const SIDE_POSITION := Vector2(0, -9.3)
+const SIDE_POSITION := Vector2(0, -13.3)
 const FRONT_SCALE := Vector2(0.297, 0.297)
-const FRONT_POSITION := Vector2(-0.15, -11.0)
+const FRONT_POSITION := Vector2(-0.15, -15.0)
 const HOLDING_ORB_SCALE := Vector2(0.29, 0.29)
-const HOLDING_ORB_POSITION := Vector2(-1.3, -10.0)
+const HOLDING_ORB_POSITION := Vector2(-1.3, -14.0)
 const DEAD_SCALE := Vector2(0.323, 0.323)
-const DEAD_POSITION := Vector2(0.97, -11.65)
+const DEAD_POSITION := Vector2(0.97, -15.65)
 const EVIL_SCALE := Vector2(0.234, 0.234)
-const EVIL_POSITION := Vector2(1.52, -11.0)
+const EVIL_POSITION := Vector2(1.52, -15.0)
 const SURPRISE_SCALE := Vector2(0.302, 0.302)
-const SURPRISE_POSITION := Vector2(-0.15, -9.95)
+const SURPRISE_POSITION := Vector2(-0.15, -13.95)
 const CRYING_SCALE := Vector2(0.151, 0.151)
-const CRYING_POSITION := Vector2(-0.6, -12.06)
+const CRYING_POSITION := Vector2(-0.6, -16.06)
 
 const POSE_SIDE := "side"
 const POSE_FRONT := "front"
@@ -82,6 +88,7 @@ var current_pose: String = POSE_SIDE
 var is_showing_good_orb_reaction: bool = false
 var is_showing_crying: bool = false
 var is_stealthed: bool = false
+var is_ending: bool = false
 
 
 func _ready() -> void:
@@ -108,6 +115,10 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if is_ending:
+		_lock_camera_vertical()
+		return
+
 	if is_respawning:
 		_lock_camera_vertical()
 		return
@@ -293,6 +304,15 @@ func _restore_pose_for_current_state() -> void:
 # Called by checkpoints to update where the player will respawn.
 func set_respawn_position(new_respawn_position: Vector2) -> void:
 	respawn_position = new_respawn_position
+
+
+# Called once by game_controller.gd when the door goal is reached. Freezes
+# movement/input the same way is_respawning already does (see
+# _physics_process), without touching any respawn/death state -- this is a
+# one-way stop for the rest of the session, not a reusable freeze.
+func stop_for_ending() -> void:
+	is_ending = true
+	velocity = Vector2.ZERO
 
 
 # Called by Transparent Caster pickups. Makes the ghost undetectable to

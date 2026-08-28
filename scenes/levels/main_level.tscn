@@ -1,4 +1,4 @@
-[gd_scene load_steps=51 format=3]
+[gd_scene load_steps=49 format=3]
 
 [ext_resource type="Script" path="res://scripts/systems/background_scroller.gd" id="10"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/ghost_hunter.tscn" id="1"]
@@ -9,7 +9,7 @@
 [ext_resource type="Script" path="res://scripts/systems/fall_zone.gd" id="6"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/bg-far.png" id="7"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/bg-mid.png" id="8"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/bg-near.png" id="9"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/bg-bottom.png" id="9"]
 [ext_resource type="Texture2D" path="res://assets/characters/platform/pl-grave.png" id="12"]
 [ext_resource type="Texture2D" path="res://assets/characters/platform/pl-stone.png" id="13"]
 [ext_resource type="Texture2D" path="res://assets/characters/platform/pl-fence.png" id="14"]
@@ -23,6 +23,8 @@
 [ext_resource type="Texture2D" path="res://assets/characters/platform/pl-mossy.png" id="22"]
 [ext_resource type="Texture2D" path="res://assets/characters/platform/pl-log.png" id="23"]
 [ext_resource type="PackedScene" path="res://scenes/items/transparent_caster.tscn" id="24"]
+[ext_resource type="Texture2D" path="res://assets/characters/ghost/ghost_good_idle_front.png" id="25"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/bg-sky.png" id="26"]
 
 [sub_resource type="RectangleShape2D" id="Scene1ShapeASmall"]
 size = Vector2(617, 70)
@@ -52,28 +54,22 @@ size = Vector2(250, 70)
 size = Vector2(310, 70)
 
 [sub_resource type="RectangleShape2D" id="Scene2ShapeLower1"]
-size = Vector2(190, 70)
-
-[sub_resource type="RectangleShape2D" id="Scene2ShapeLower2"]
-size = Vector2(180, 70)
-
-[sub_resource type="RectangleShape2D" id="Scene2ShapeUpper1"]
 size = Vector2(220, 70)
 
+[sub_resource type="RectangleShape2D" id="Scene2ShapeUpper1"]
+size = Vector2(210, 70)
+
 [sub_resource type="RectangleShape2D" id="Scene2ShapeUpper2"]
-size = Vector2(160, 70)
+size = Vector2(200, 70)
 
 [sub_resource type="RectangleShape2D" id="Scene2Shape320"]
 size = Vector2(320, 70)
 
-[sub_resource type="RectangleShape2D" id="Scene2ShapeE2Root"]
+[sub_resource type="RectangleShape2D" id="Scene2ShapePostHunter"]
 size = Vector2(180, 70)
 
-[sub_resource type="RectangleShape2D" id="Scene2ShapeE3Landing"]
-size = Vector2(210, 70)
-
 [sub_resource type="RectangleShape2D" id="Scene2ShapeCheckpoint"]
-size = Vector2(170, 70)
+size = Vector2(220, 70)
 
 [sub_resource type="RectangleShape2D" id="Scene3ShapeEntry"]
 size = Vector2(300, 70)
@@ -81,26 +77,20 @@ size = Vector2(300, 70)
 [sub_resource type="RectangleShape2D" id="Scene3ShapeLower1"]
 size = Vector2(430, 70)
 
-[sub_resource type="RectangleShape2D" id="Scene3ShapeUpper1"]
-size = Vector2(190, 70)
-
 [sub_resource type="RectangleShape2D" id="Scene3ShapeUpper2"]
-size = Vector2(160, 70)
+size = Vector2(220, 70)
 
 [sub_resource type="RectangleShape2D" id="Scene3ShapeHunterGround"]
 size = Vector2(340, 70)
 
 [sub_resource type="RectangleShape2D" id="Scene3ShapeD1"]
-size = Vector2(210, 70)
-
-[sub_resource type="RectangleShape2D" id="Scene3ShapeD2"]
 size = Vector2(200, 70)
 
-[sub_resource type="RectangleShape2D" id="Scene3ShapeD3"]
-size = Vector2(220, 70)
+[sub_resource type="RectangleShape2D" id="Scene3ShapeD2"]
+size = Vector2(280, 70)
 
-[sub_resource type="RectangleShape2D" id="Scene3ShapeCalmApproach"]
-size = Vector2(210, 70)
+[sub_resource type="RectangleShape2D" id="Scene3ShapeD3"]
+size = Vector2(240, 70)
 
 [sub_resource type="RectangleShape2D" id="FallZoneShape"]
 size = Vector2(10600, 300)
@@ -109,6 +99,14 @@ size = Vector2(10600, 300)
 
 [node name="BackgroundParallax" type="Node2D" parent="."]
 script = ExtResource("10")
+
+[node name="SkyLayer" type="Node2D" parent="BackgroundParallax"]
+z_index = -10
+
+[node name="SkySprite" type="Sprite2D" parent="BackgroundParallax/SkyLayer"]
+centered = false
+scale = Vector2(2.0, 2.0)
+texture = ExtResource("26")
 
 [node name="FarLayer" type="Node2D" parent="BackgroundParallax"]
 z_index = -9
@@ -131,15 +129,10 @@ z_index = -7
 
 [node name="NearSprite" type="Sprite2D" parent="BackgroundParallax/NearLayer"]
 centered = false
-scale = Vector2(2.0, 2.0)
+scale = Vector2(1.85, 1.85)
 texture = ExtResource("9")
 
 [node name="Graveyard" type="Node2D" parent="."]
-
-[node name="Background" type="Polygon2D" parent="Graveyard"]
-z_index = -10
-color = Color(0.04, 0.06, 0.16, 1)
-polygon = PackedVector2Array(0, -500, 3070, -500, 3070, 1450, 0, 1450)
 
 [node name="AreaLabel" type="Label" parent="Graveyard"]
 position = Vector2(50, -250)
@@ -154,8 +147,8 @@ position = Vector2(-591.5, 975)
 shape = SubResource("Scene1ShapeASmall")
 
 [node name="Sprite" type="Sprite2D" parent="Graveyard/PlatformA_Spawn1"]
-position = Vector2(0, 40.3)
-scale = Vector2(0.2841, 0.2841)
+position = Vector2(0, 42.0)
+scale = Vector2(0.2955, 0.2955)
 texture = ExtResource("13")
 
 [node name="PlatformA_Spawn2" type="StaticBody2D" parent="Graveyard"]
@@ -165,8 +158,8 @@ position = Vector2(25.5, 975)
 shape = SubResource("Scene1ShapeASmall")
 
 [node name="Sprite" type="Sprite2D" parent="Graveyard/PlatformA_Spawn2"]
-position = Vector2(0, 43.8)
-scale = Vector2(0.2841, 0.2841)
+position = Vector2(0, 45.5)
+scale = Vector2(0.2955, 0.2955)
 texture = ExtResource("15")
 
 [node name="PlatformA_Spawn3" type="StaticBody2D" parent="Graveyard"]
@@ -176,8 +169,8 @@ position = Vector2(642.5, 975)
 shape = SubResource("Scene1ShapeASmall")
 
 [node name="Sprite" type="Sprite2D" parent="Graveyard/PlatformA_Spawn3"]
-position = Vector2(0, 40.3)
-scale = Vector2(0.2841, 0.2841)
+position = Vector2(0, 42.0)
+scale = Vector2(0.2955, 0.2955)
 texture = ExtResource("13")
 
 [node name="PureOrb1" parent="Graveyard" instance=ExtResource("2")]
@@ -187,7 +180,7 @@ position = Vector2(300, 890)
 visible = false
 
 [node name="OrbSprite" type="Sprite2D" parent="Graveyard/PureOrb1"]
-scale = Vector2(0.047, 0.047)
+scale = Vector2(0.034, 0.034)
 texture = ExtResource("18")
 
 [node name="PlatformB_FirstJump" type="StaticBody2D" parent="Graveyard"]
@@ -226,7 +219,7 @@ position = Vector2(2260, 700)
 visible = false
 
 [node name="OrbSprite" type="Sprite2D" parent="Graveyard/EvilOrb1"]
-scale = Vector2(0.0391, 0.0391)
+scale = Vector2(0.0282, 0.0282)
 texture = ExtResource("19")
 
 [node name="PlatformE_Recovery" type="StaticBody2D" parent="Graveyard"]
@@ -236,8 +229,8 @@ position = Vector2(2600, 975)
 shape = SubResource("Scene1ShapeE")
 
 [node name="Sprite" type="Sprite2D" parent="Graveyard/PlatformE_Recovery"]
-position = Vector2(0, 1)
-scale = Vector2(0.2762, 0.2762)
+position = Vector2(0, 44.2)
+scale = Vector2(0.2872, 0.2872)
 texture = ExtResource("15")
 
 [node name="Checkpoint1" parent="Graveyard" instance=ExtResource("4")]
@@ -250,8 +243,8 @@ visible = false
 visible = false
 
 [node name="PortalSprite" type="Sprite2D" parent="Graveyard/Checkpoint1"]
-position = Vector2(0, -38.2)
-scale = Vector2(0.075, 0.075)
+position = Vector2(0, -44.0)
+scale = Vector2(0.09, 0.09)
 texture = ExtResource("20")
 
 [node name="ActivationFX" type="Node" parent="Graveyard/Checkpoint1"]
@@ -264,8 +257,8 @@ position = Vector2(3065, 975)
 shape = SubResource("Scene1ShapeF")
 
 [node name="Sprite" type="Sprite2D" parent="Graveyard/PlatformF_HunterGround"]
-position = Vector2(0, -15)
-scale = Vector2(0.1519, 0.1519)
+position = Vector2(0, 22.4)
+scale = Vector2(0.158, 0.158)
 texture = ExtResource("13")
 
 [node name="GhostHunter" parent="Graveyard" instance=ExtResource("1")]
@@ -281,8 +274,8 @@ position = Vector2(3380, 975)
 shape = SubResource("Scene1ShapeG")
 
 [node name="Sprite" type="Sprite2D" parent="Graveyard/PlatformG_Transition"]
-position = Vector2(0, -5)
-scale = Vector2(0.1691, 0.1691)
+position = Vector2(0, 21.9)
+scale = Vector2(0.1759, 0.1759)
 texture = ExtResource("16")
 
 [node name="FogTransition" type="Sprite2D" parent="Graveyard"]
@@ -293,11 +286,6 @@ z_index = -1
 texture = ExtResource("17")
 
 [node name="HauntedWoods" type="Node2D" parent="."]
-
-[node name="Background" type="Polygon2D" parent="HauntedWoods"]
-z_index = -10
-color = Color(0.1, 0.04, 0.14, 1)
-polygon = PackedVector2Array(3070, -500, 6150, -500, 6150, 1450, 3070, 1450)
 
 [node name="AreaLabel" type="Label" parent="HauntedWoods"]
 position = Vector2(3120, -250)
@@ -317,14 +305,14 @@ scale = Vector2(0.1677, 0.1677)
 texture = ExtResource("23")
 
 [node name="FogEntryGap" type="Sprite2D" parent="HauntedWoods"]
-position = Vector2(3920, 1000)
+position = Vector2(3860, 1000)
 scale = Vector2(0.17, 0.17)
 modulate = Color(1, 1, 1, 0.4)
 z_index = -1
 texture = ExtResource("17")
 
 [node name="Caster1_Platform" type="StaticBody2D" parent="HauntedWoods"]
-position = Vector2(4095, 935)
+position = Vector2(3950, 935)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedWoods/Caster1_Platform"]
 shape = SubResource("Scene2ShapeCaster1")
@@ -335,7 +323,7 @@ scale = Vector2(0.1628, 0.1628)
 texture = ExtResource("22")
 
 [node name="Caster1" parent="HauntedWoods" instance=ExtResource("24")]
-position = Vector2(4095, 830)
+position = Vector2(3950, 844.5)
 
 [node name="Hunter1_Ground" type="StaticBody2D" parent="HauntedWoods"]
 position = Vector2(4465, 975)
@@ -355,78 +343,67 @@ patrol_distance = 85.0
 cone_length = 270.0
 
 [node name="Lower1" type="StaticBody2D" parent="HauntedWoods"]
-position = Vector2(4815, 975)
+position = Vector2(4800, 975)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedWoods/Lower1"]
 shape = SubResource("Scene2ShapeLower1")
 
 [node name="Sprite" type="Sprite2D" parent="HauntedWoods/Lower1"]
-position = Vector2(0, 13.5)
-scale = Vector2(0.1237, 0.1237)
-texture = ExtResource("22")
-
-[node name="EvilOrb1" parent="HauntedWoods" instance=ExtResource("3")]
-position = Vector2(4950, 870)
-
-[node name="Visual" parent="HauntedWoods/EvilOrb1"]
-visible = false
-
-[node name="OrbSprite" type="Sprite2D" parent="HauntedWoods/EvilOrb1"]
-scale = Vector2(0.0356, 0.0356)
-texture = ExtResource("19")
+position = Vector2(0, 14.11)
+scale = Vector2(0.1085, 0.1085)
+texture = ExtResource("23")
 
 [node name="FogRouteChoice" type="Sprite2D" parent="HauntedWoods"]
-position = Vector2(4900, 1015)
+position = Vector2(4750, 1015)
 scale = Vector2(0.2, 0.2)
 modulate = Color(1, 1, 1, 0.5)
 z_index = -1
 texture = ExtResource("17")
 
-[node name="Lower2" type="StaticBody2D" parent="HauntedWoods"]
-position = Vector2(5080, 975)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedWoods/Lower2"]
-shape = SubResource("Scene2ShapeLower2")
-
-[node name="Sprite" type="Sprite2D" parent="HauntedWoods/Lower2"]
-position = Vector2(0, 11.8)
-scale = Vector2(0.0829, 0.0829)
-texture = ExtResource("13")
-
 [node name="Upper1" type="StaticBody2D" parent="HauntedWoods"]
-position = Vector2(4830, 855)
+position = Vector2(4770, 835)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedWoods/Upper1"]
 shape = SubResource("Scene2ShapeUpper1")
 
 [node name="Sprite" type="Sprite2D" parent="HauntedWoods/Upper1"]
-position = Vector2(0, 14.1)
-scale = Vector2(0.1085, 0.1085)
+position = Vector2(0, 13.47)
+scale = Vector2(0.1036, 0.1036)
 texture = ExtResource("23")
 
+[node name="EvilOrb1" parent="HauntedWoods" instance=ExtResource("3")]
+position = Vector2(4770, 730)
+
+[node name="Visual" parent="HauntedWoods/EvilOrb1"]
+visible = false
+
+[node name="OrbSprite" type="Sprite2D" parent="HauntedWoods/EvilOrb1"]
+scale = Vector2(0.0273, 0.0273)
+texture = ExtResource("19")
+
 [node name="Upper2" type="StaticBody2D" parent="HauntedWoods"]
-position = Vector2(5100, 825)
+position = Vector2(5020, 655)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedWoods/Upper2"]
 shape = SubResource("Scene2ShapeUpper2")
 
 [node name="Sprite" type="Sprite2D" parent="HauntedWoods/Upper2"]
-position = Vector2(0, 11.2)
-scale = Vector2(0.0902, 0.0902)
-texture = ExtResource("16")
+position = Vector2(0, 12.82)
+scale = Vector2(0.0986, 0.0986)
+texture = ExtResource("23")
 
 [node name="PureOrb1" parent="HauntedWoods" instance=ExtResource("2")]
-position = Vector2(5100, 720)
+position = Vector2(5020, 550)
 
 [node name="Visual" parent="HauntedWoods/PureOrb1"]
 visible = false
 
 [node name="OrbSprite" type="Sprite2D" parent="HauntedWoods/PureOrb1"]
-scale = Vector2(0.0427, 0.0427)
+scale = Vector2(0.0328, 0.0328)
 texture = ExtResource("18")
 
 [node name="E1_Log" type="StaticBody2D" parent="HauntedWoods"]
-position = Vector2(5440, 975)
+position = Vector2(5280, 975)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedWoods/E1_Log"]
 shape = SubResource("Scene2Shape320")
@@ -436,47 +413,8 @@ position = Vector2(0, 20.5)
 scale = Vector2(0.1579, 0.1579)
 texture = ExtResource("23")
 
-[node name="FogDeepForest1" type="Sprite2D" parent="HauntedWoods"]
-position = Vector2(5660, 1010)
-scale = Vector2(0.2, 0.2)
-modulate = Color(1, 1, 1, 0.5)
-z_index = -1
-texture = ExtResource("17")
-
-[node name="E2_Root" type="StaticBody2D" parent="HauntedWoods"]
-position = Vector2(5810, 885)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedWoods/E2_Root"]
-shape = SubResource("Scene2ShapeE2Root")
-
-[node name="Sprite" type="Sprite2D" parent="HauntedWoods/E2_Root"]
-position = Vector2(0, 12.6)
-scale = Vector2(0.1015, 0.1015)
-texture = ExtResource("16")
-
-[node name="Caster2" parent="HauntedWoods" instance=ExtResource("24")]
-position = Vector2(5810, 790)
-
-[node name="FogDeepForest2" type="Sprite2D" parent="HauntedWoods"]
-position = Vector2(5950, 1015)
-scale = Vector2(0.18, 0.18)
-modulate = Color(1, 1, 1, 0.45)
-z_index = -1
-texture = ExtResource("17")
-
-[node name="E3_Landing" type="StaticBody2D" parent="HauntedWoods"]
-position = Vector2(6105, 975)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedWoods/E3_Landing"]
-shape = SubResource("Scene2ShapeE3Landing")
-
-[node name="Sprite" type="Sprite2D" parent="HauntedWoods/E3_Landing"]
-position = Vector2(0, 14.9)
-scale = Vector2(0.0967, 0.0967)
-texture = ExtResource("15")
-
 [node name="Hunter2_Ground" type="StaticBody2D" parent="HauntedWoods"]
-position = Vector2(6460, 975)
+position = Vector2(5790, 975)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedWoods/Hunter2_Ground"]
 shape = SubResource("Scene2Shape320")
@@ -487,24 +425,35 @@ scale = Vector2(0.1579, 0.1579)
 texture = ExtResource("23")
 
 [node name="GhostHunter2" parent="HauntedWoods" instance=ExtResource("1")]
-position = Vector2(6460, 890)
+position = Vector2(5700, 890)
 patrol_speed = 80.0
-patrol_distance = 95.0
+patrol_distance = 70.0
 cone_length = 300.0
 
+[node name="F_PostHunter" type="StaticBody2D" parent="HauntedWoods"]
+position = Vector2(6080, 975)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedWoods/F_PostHunter"]
+shape = SubResource("Scene2ShapePostHunter")
+
+[node name="Sprite" type="Sprite2D" parent="HauntedWoods/F_PostHunter"]
+position = Vector2(0, 12.9)
+scale = Vector2(0.0829, 0.0829)
+texture = ExtResource("15")
+
 [node name="G_Checkpoint" type="StaticBody2D" parent="HauntedWoods"]
-position = Vector2(6795, 975)
+position = Vector2(6320, 975)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedWoods/G_Checkpoint"]
 shape = SubResource("Scene2ShapeCheckpoint")
 
 [node name="Sprite" type="Sprite2D" parent="HauntedWoods/G_Checkpoint"]
-position = Vector2(0, 12.1)
-scale = Vector2(0.0783, 0.0783)
+position = Vector2(0, 15.66)
+scale = Vector2(0.1013, 0.1013)
 texture = ExtResource("15")
 
 [node name="Checkpoint2" parent="HauntedWoods" instance=ExtResource("4")]
-position = Vector2(6795, 920)
+position = Vector2(6320, 920)
 
 [node name="Flame" parent="HauntedWoods/Checkpoint2"]
 visible = false
@@ -513,26 +462,21 @@ visible = false
 visible = false
 
 [node name="PortalSprite" type="Sprite2D" parent="HauntedWoods/Checkpoint2"]
-position = Vector2(0, -38.2)
-scale = Vector2(0.075, 0.075)
+position = Vector2(0, -36.0)
+scale = Vector2(0.09, 0.09)
 texture = ExtResource("20")
 
 [node name="ActivationFX" type="Node" parent="HauntedWoods/Checkpoint2"]
 script = ExtResource("21")
 
 [node name="FogFadeOut" type="Sprite2D" parent="HauntedWoods"]
-position = Vector2(6795, 1010)
+position = Vector2(6320, 1010)
 scale = Vector2(0.13, 0.13)
 modulate = Color(1, 1, 1, 0.2)
 z_index = -1
 texture = ExtResource("17")
 
 [node name="HauntedHouseGrounds" type="Node2D" parent="."]
-
-[node name="Background" type="Polygon2D" parent="HauntedHouseGrounds"]
-z_index = -10
-color = Color(0.16, 0.08, 0.11, 1)
-polygon = PackedVector2Array(6150, -500, 10200, -500, 10200, 1450, 6150, 1450)
 
 [node name="AreaLabel" type="Label" parent="HauntedHouseGrounds"]
 position = Vector2(6200, -250)
@@ -562,53 +506,45 @@ position = Vector2(0, 30.5)
 scale = Vector2(0.2799, 0.2799)
 texture = ExtResource("22")
 
+[node name="Caster1" parent="HauntedHouseGrounds" instance=ExtResource("24")]
+position = Vector2(7250, 884.5)
+
 [node name="EvilOrb1" parent="HauntedHouseGrounds" instance=ExtResource("3")]
-position = Vector2(7405, 870)
+position = Vector2(7380, 880)
 
 [node name="Visual" parent="HauntedHouseGrounds/EvilOrb1"]
 visible = false
 
 [node name="OrbSprite" type="Sprite2D" parent="HauntedHouseGrounds/EvilOrb1"]
-scale = Vector2(0.0356, 0.0356)
+scale = Vector2(0.0282, 0.0282)
 texture = ExtResource("19")
 
 [node name="FogRouteChoice" type="Sprite2D" parent="HauntedHouseGrounds"]
-position = Vector2(7350, 1010)
+position = Vector2(7500, 1010)
 scale = Vector2(0.15, 0.15)
 modulate = Color(1, 1, 1, 0.3)
 z_index = -1
 texture = ExtResource("17")
 
-[node name="Upper1" type="StaticBody2D" parent="HauntedHouseGrounds"]
-position = Vector2(7375, 865)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedHouseGrounds/Upper1"]
-shape = SubResource("Scene3ShapeUpper1")
-
-[node name="Sprite" type="Sprite2D" parent="HauntedHouseGrounds/Upper1"]
-position = Vector2(0, 12.4)
-scale = Vector2(0.0875, 0.0875)
-texture = ExtResource("13")
-
 [node name="Upper2" type="StaticBody2D" parent="HauntedHouseGrounds"]
-position = Vector2(7630, 805)
+position = Vector2(7580, 765)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedHouseGrounds/Upper2"]
 shape = SubResource("Scene3ShapeUpper2")
 
 [node name="Sprite" type="Sprite2D" parent="HauntedHouseGrounds/Upper2"]
-position = Vector2(0, 11.2)
-scale = Vector2(0.0902, 0.0902)
+position = Vector2(0, 15.4)
+scale = Vector2(0.124, 0.124)
 texture = ExtResource("16")
 
 [node name="PureOrb1" parent="HauntedHouseGrounds" instance=ExtResource("2")]
-position = Vector2(7630, 700)
+position = Vector2(7580, 660)
 
 [node name="Visual" parent="HauntedHouseGrounds/PureOrb1"]
 visible = false
 
 [node name="OrbSprite" type="Sprite2D" parent="HauntedHouseGrounds/PureOrb1"]
-scale = Vector2(0.0427, 0.0427)
+scale = Vector2(0.034, 0.034)
 texture = ExtResource("18")
 
 [node name="Hunter1_Ground" type="StaticBody2D" parent="HauntedHouseGrounds"]
@@ -621,9 +557,6 @@ shape = SubResource("Scene3ShapeHunterGround")
 position = Vector2(0, 24.1)
 scale = Vector2(0.1565, 0.1565)
 texture = ExtResource("15")
-
-[node name="Caster1" parent="HauntedHouseGrounds" instance=ExtResource("24")]
-position = Vector2(7860, 890)
 
 [node name="GhostHunter1" parent="HauntedHouseGrounds" instance=ExtResource("1")]
 position = Vector2(8000, 890)
@@ -638,37 +571,37 @@ position = Vector2(8345, 975)
 shape = SubResource("Scene3ShapeD1")
 
 [node name="Sprite" type="Sprite2D" parent="HauntedHouseGrounds/D1_Stone"]
-position = Vector2(0, 13.7)
-scale = Vector2(0.0967, 0.0967)
+position = Vector2(0, 13.05)
+scale = Vector2(0.0921, 0.0921)
 texture = ExtResource("13")
 
 [node name="FogHardestJump" type="Sprite2D" parent="HauntedHouseGrounds"]
-position = Vector2(8495, 1015)
+position = Vector2(8480, 1015)
 scale = Vector2(0.15, 0.15)
 modulate = Color(1, 1, 1, 0.3)
 z_index = -1
 texture = ExtResource("17")
 
 [node name="D2_MossyRaised" type="StaticBody2D" parent="HauntedHouseGrounds"]
-position = Vector2(8640, 815)
+position = Vector2(8620, 765)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedHouseGrounds/D2_MossyRaised"]
 shape = SubResource("Scene3ShapeD2")
 
 [node name="Sprite" type="Sprite2D" parent="HauntedHouseGrounds/D2_MossyRaised"]
-position = Vector2(0, 14.2)
-scale = Vector2(0.1302, 0.1302)
+position = Vector2(0, 19.87)
+scale = Vector2(0.1823, 0.1823)
 texture = ExtResource("22")
 
 [node name="D3_Descend" type="StaticBody2D" parent="HauntedHouseGrounds"]
-position = Vector2(8970, 975)
+position = Vector2(8950, 975)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedHouseGrounds/D3_Descend"]
 shape = SubResource("Scene3ShapeD3")
 
 [node name="Sprite" type="Sprite2D" parent="HauntedHouseGrounds/D3_Descend"]
-position = Vector2(0, 15.6)
-scale = Vector2(0.1013, 0.1013)
+position = Vector2(0, 17.0)
+scale = Vector2(0.1104, 0.1104)
 texture = ExtResource("15")
 
 [node name="Hunter2_Ground" type="StaticBody2D" parent="HauntedHouseGrounds"]
@@ -678,12 +611,9 @@ position = Vector2(9350, 975)
 shape = SubResource("Scene3ShapeHunterGround")
 
 [node name="Sprite" type="Sprite2D" parent="HauntedHouseGrounds/Hunter2_Ground"]
-position = Vector2(0, 24.1)
-scale = Vector2(0.1565, 0.1565)
+position = Vector2(0, 25.1)
+scale = Vector2(0.1628, 0.1628)
 texture = ExtResource("15")
-
-[node name="Caster2" parent="HauntedHouseGrounds" instance=ExtResource("24")]
-position = Vector2(9210, 890)
 
 [node name="GhostHunter2" parent="HauntedHouseGrounds" instance=ExtResource("1")]
 position = Vector2(9350, 890)
@@ -691,25 +621,40 @@ patrol_speed = 95.0
 patrol_distance = 110.0
 cone_length = 310.0
 
-[node name="F_CalmApproach" type="StaticBody2D" parent="HauntedHouseGrounds"]
-position = Vector2(9715, 975)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedHouseGrounds/F_CalmApproach"]
-shape = SubResource("Scene3ShapeCalmApproach")
-
-[node name="Sprite" type="Sprite2D" parent="HauntedHouseGrounds/F_CalmApproach"]
-position = Vector2(0, 14.9)
-scale = Vector2(0.1367, 0.1367)
-texture = ExtResource("22")
+[node name="FogFinalApproach" type="Sprite2D" parent="HauntedHouseGrounds"]
+position = Vector2(9620, 1010)
+scale = Vector2(0.15, 0.15)
+modulate = Color(1, 1, 1, 0.3)
+z_index = -1
+texture = ExtResource("17")
 
 [node name="EndPortal" parent="HauntedHouseGrounds" instance=ExtResource("5")]
-position = Vector2(9800, 880)
+position = Vector2(9780, 940)
 
-[node name="Frame" parent="HauntedHouseGrounds/EndPortal"]
+[node name="HouseDoorwayGlow" type="Node2D" parent="HauntedHouseGrounds" groups=["house_doorway_glow"]]
+position = Vector2(9780, 700)
+visible = false
+z_index = -5
+
+[node name="Outer" type="Polygon2D" parent="HauntedHouseGrounds/HouseDoorwayGlow"]
+color = Color(1, 0.8, 0.45, 0.35)
+polygon = PackedVector2Array(60, 0, 42.4, 42.4, 0, 60, -42.4, 42.4, -60, 0, -42.4, -42.4, 0, -60, 42.4, -42.4)
+
+[node name="Inner" type="Polygon2D" parent="HauntedHouseGrounds/HouseDoorwayGlow"]
+color = Color(1, 0.9, 0.6, 0.55)
+polygon = PackedVector2Array(30, 0, 21.2, 21.2, 0, 30, -21.2, 21.2, -30, 0, -21.2, -21.2, 0, -30, 21.2, -21.2)
+
+[node name="ArrivalGhost" type="Node2D" parent="HauntedHouseGrounds" groups=["arrival_ghost"]]
+position = Vector2(9780, 850)
 visible = false
 
-[node name="Glow" parent="HauntedHouseGrounds/EndPortal"]
-visible = false
+[node name="Glow" type="Polygon2D" parent="HauntedHouseGrounds/ArrivalGhost"]
+color = Color(0.75, 0.9, 1, 0.5)
+polygon = PackedVector2Array(26, 0, 18.4, 18.4, 0, 26, -18.4, 18.4, -26, 0, -18.4, -18.4, 0, -26, 18.4, -18.4)
+
+[node name="Sprite" type="Sprite2D" parent="HauntedHouseGrounds/ArrivalGhost"]
+scale = Vector2(0.15, 0.15)
+texture = ExtResource("25")
 
 [node name="FallZone" type="Area2D" parent="."]
 position = Vector2(4975, 1300)
