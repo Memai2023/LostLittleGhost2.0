@@ -1,10 +1,11 @@
 extends Node2D
 
-## Timings for the door-arrival sequence (total ~1.7s, within the 1.5-2.5s
-## target once the initial pulse/fade phases are included).
-const PULSE_STEP_DURATION := 0.12
+## The main arrival sequence is 1.8 seconds. Door pulses run in parallel so
+## the full effect stays inside the intended 1.5-2.5 second window.
+const PULSE_STEP_DURATION := 0.14
+const DOOR_BRIGHTEN_DURATION := 0.28
 const GLOW_FADE_IN_DURATION := 0.35
-const GHOST_SWAP_DURATION := 0.35
+const GHOST_SWAP_DURATION := 0.45
 const HOLD_DURATION := 1.0
 
 var _ending_triggered: bool = false
@@ -40,15 +41,34 @@ func _run_arrival_sequence() -> void:
 	var house_glow: Node = get_tree().get_first_node_in_group("house_doorway_glow")
 	var arrival_ghost: Node = get_tree().get_first_node_in_group("arrival_ghost")
 
-	# Door light pulse (two quick blinks) -- its own short-lived tween so it
-	# runs alongside the main sequence below without complicating its
-	# parallel/sequential structure.
-	if end_portal != null and end_portal.has_node("DoorLight"):
-		var door_light: CanvasItem = end_portal.get_node("DoorLight")
+	# Pulse the soft light centered inside the door artwork. This replaces the
+	# old solid Polygon2D placeholder, so no geometric circle sits over the art.
+	if end_portal != null and end_portal.has_node("DoorLightPulse"):
+		var door_light: CanvasItem = end_portal.get_node("DoorLightPulse")
+		door_light.visible = true
+		door_light.modulate.a = 0.0
 		var pulse := create_tween()
+		pulse.tween_property(door_light, "modulate:a", 0.95, PULSE_STEP_DURATION)
+		pulse.tween_property(door_light, "modulate:a", 0.2, PULSE_STEP_DURATION)
 		pulse.tween_property(door_light, "modulate:a", 1.0, PULSE_STEP_DURATION)
-		pulse.tween_property(door_light, "modulate:a", 0.45, PULSE_STEP_DURATION)
-		pulse.tween_property(door_light, "modulate:a", 1.0, PULSE_STEP_DURATION)
+		pulse.tween_property(door_light, "modulate:a", 0.18, PULSE_STEP_DURATION)
+
+	# Briefly brighten the full door while its internal light blinks.
+	if end_portal != null and end_portal.has_node("Sprite"):
+		var door_artwork: CanvasItem = end_portal.get_node("Sprite")
+		var brighten := create_tween()
+		brighten.tween_property(
+			door_artwork,
+			"modulate",
+			Color(1.3, 1.16, 0.86, 1.0),
+			DOOR_BRIGHTEN_DURATION
+		)
+		brighten.tween_property(
+			door_artwork,
+			"modulate",
+			Color.WHITE,
+			DOOR_BRIGHTEN_DURATION
+		)
 
 	var tween := create_tween()
 
@@ -57,21 +77,35 @@ func _run_arrival_sequence() -> void:
 		house_glow.visible = true
 		house_glow.modulate.a = 0.0
 		tween.tween_property(house_glow, "modulate:a", 0.9, GLOW_FADE_IN_DURATION)
+	else:
+		tween.tween_interval(GLOW_FADE_IN_DURATION)
 
 	# Phase 2: normal ghost fades out while the small glowing ghost fades in
 	# at the house entrance, together.
-	tween.set_parallel(true)
+	var swap_started := false
 	if player != null and player.has_node("GoodGhostSprite"):
 		tween.tween_property(player.get_node("GoodGhostSprite"), "modulate:a", 0.0, GHOST_SWAP_DURATION)
+		swap_started = true
 	if arrival_ghost != null:
 		arrival_ghost.visible = true
 		arrival_ghost.modulate.a = 0.0
-		tween.tween_property(arrival_ghost, "modulate:a", 1.0, GHOST_SWAP_DURATION)
-	tween.set_parallel(false)
+		if swap_started:
+			tween.parallel().tween_property(arrival_ghost, "modulate:a", 1.0, GHOST_SWAP_DURATION)
+		else:
+			tween.tween_property(arrival_ghost, "modulate:a", 1.0, GHOST_SWAP_DURATION)
+		swap_started = true
+	if not swap_started:
+		tween.tween_interval(GHOST_SWAP_DURATION)
+	tween.tween_callback(_hide_player_visual.bind(player))
 
 	# Phase 3: brief hold on the arrival image, then complete.
 	tween.tween_interval(HOLD_DURATION)
 	tween.tween_callback(_finish_ending)
+
+
+func _hide_player_visual(player: Node) -> void:
+	if is_instance_valid(player) and player.has_node("GoodGhostSprite"):
+		player.get_node("GoodGhostSprite").visible = false
 
 
 func _finish_ending() -> void:

@@ -28,18 +28,11 @@ extends Node2D
 ## leads as the camera moves -- genuinely continuous motion for the whole
 ## level.
 ##
-## The Near texture (bg-bottom.png) isn't a seamless tile -- its own right
-## edge doesn't match its own left edge -- but it IS painted with
-## approximate left-right mirror symmetry (matching branch/fence-post
-## clusters near both edges, confirmed by diffing the image against its
-## own horizontal flip). So instead of placing two identical copies (whose
-## meeting edges are unrelated content -> the visible seam), alternating
-## copies are horizontally flipped: every second tile shows the mirror
-## image, so each seam is between a normal edge and its own near-mirror
-## match rather than two arbitrary edges. Pure per-frame math (no history
-## tracking needed): a tile's flip state is fully determined by
-## floor(its own left edge / texture width), so it's always consistent
-## regardless of camera direction or speed.
+## The Near texture (bg-bottom.png) isn't a seamless tile, so two identical
+## copies are placed with a small horizontal overlap. Copies must not be
+## mirrored: joining an edge to its own flipped duplicate creates the very
+## obvious symmetrical branch/foreground motifs that reveal the loop.
+## Only X wraps; Near's Y is captured once and remains fixed.
 
 @export var camera_start_x: float = 200.0
 @export var camera_end_x: float = 9800.0
@@ -70,6 +63,11 @@ extends Node2D
 @export var mid_scroll_scale: float = 0.50
 @export var near_scroll_scale: float = 1.35
 
+## Small world-space overlap between adjacent Near copies. This hides a
+## transparent hairline at the texture boundary without introducing a
+## second row or any vertical repetition.
+@export_range(0.0, 16.0) var near_repeat_overlap: float = 4.0
+
 # Sky, Far, Mid -- the clamped/section-anchored layers.
 @onready var _layers: Array[Sprite2D] = [
 	$SkyLayer/SkySprite,
@@ -86,6 +84,8 @@ var _layer_sizes: Array[Vector2] = []
 var _scroll_scales: Array[float] = []
 var _near_size: Vector2 = Vector2.ZERO
 var _near_depth_factor: float = 0.0
+var _near_fixed_y: float = 0.0
+var _near_y_initialized: bool = false
 
 var _current_section: int = 0
 # Per-layer anchor: this layer's own world x, and the camera's world x, at
@@ -115,6 +115,8 @@ func _ready() -> void:
 	_near_sprite_b.scale = _near_sprite_a.scale
 	_near_sprite_b.centered = _near_sprite_a.centered
 	_near_sprite_a.get_parent().add_child(_near_sprite_b)
+	_near_sprite_a.flip_h = false
+	_near_sprite_b.flip_h = false
 
 
 func _process(_delta: float) -> void:
@@ -149,27 +151,22 @@ func _process(_delta: float) -> void:
 # Near loops instead of clamping: an unbounded (never-clamped) desired_x,
 # wrapped into a single texture-width-sized window via fposmod (handles
 # near_scroll_scale > 1's negative depth_factor correctly too), covered by
-# two copies of the same texture placed edge-to-edge so the wrap point
-# itself never shows a gap -- one copy is always fully covering the
-# viewport, or handing off to the other mid-transition. Alternating tiles
-# are flip_h'd (see class doc) so each seam meets near-matching mirrored
-# content instead of an arbitrary edge -- flip_h only mirrors the drawn
-# content within each tile's rect, it doesn't move the rect itself, so this
-# is safe to add without touching any of the position math above.
+# two unmirrored copies of the same texture placed with a slight overlap so
+# the wrap point never shows a transparent gap. Y is initialized from the
+# existing framing once, then stays fixed; there is no vertical wrapping.
 func _update_near(camera_pos: Vector2) -> void:
 	var base_x: float = camera_start_x - _viewport_size.x * 0.5
 	var desired_x: float = base_x + (camera_pos.x - camera_start_x) * _near_depth_factor
 
 	var viewport_left: float = camera_pos.x - _viewport_size.x * 0.5
-	var tile_left: float = viewport_left - fposmod(viewport_left - desired_x, _near_size.x)
-	var y: float = camera_pos.y - _near_size.y * vertical_anchor_fraction
+	var repeat_width: float = maxf(_near_size.x - near_repeat_overlap, 1.0)
+	var tile_left: float = viewport_left - fposmod(viewport_left - desired_x, repeat_width)
+	if not _near_y_initialized:
+		_near_fixed_y = camera_pos.y - _near_size.y * vertical_anchor_fraction
+		_near_y_initialized = true
 
-	_near_sprite_a.global_position = Vector2(tile_left, y)
-	_near_sprite_b.global_position = Vector2(tile_left + _near_size.x, y)
-
-	var tile_index: int = floori(tile_left / _near_size.x)
-	_near_sprite_a.flip_h = posmod(tile_index, 2) == 1
-	_near_sprite_b.flip_h = posmod(tile_index + 1, 2) == 1
+	_near_sprite_a.global_position = Vector2(tile_left, _near_fixed_y)
+	_near_sprite_b.global_position = Vector2(tile_left + repeat_width, _near_fixed_y)
 
 
 # Detects a section-boundary crossing (in either direction) and re-anchors

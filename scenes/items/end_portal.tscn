@@ -1,10 +1,25 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/items/end_portal.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/characters/collect/thedoor.png" id="2"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(140, 220)
+
+[sub_resource type="Gradient" id="Gradient_door_light"]
+offsets = PackedFloat32Array(0, 0.42, 1)
+colors = PackedColorArray(1, 0.94, 0.66, 0.95, 1, 0.67, 0.22, 0.55, 1, 0.48, 0.12, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_door_light"]
+gradient = SubResource("Gradient_door_light")
+width = 96
+height = 144
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_door_light"]
+blend_mode = 1
 
 [node name="EndPortal" type="Area2D" groups=["end_portal"]]
 collision_layer = 0
@@ -21,8 +36,10 @@ position = Vector2(0, -172.7)
 scale = Vector2(0.3819, 0.3819)
 texture = ExtResource("2")
 
-[node name="DoorLight" type="Polygon2D" parent="."]
-position = Vector2(0, -160)
-modulate = Color(1, 1, 1, 0.5)
-color = Color(1, 0.85, 0.5, 1)
-polygon = PackedVector2Array(0, -35, 18, -25, 25, 0, 18, 25, 0, 35, -18, 25, -25, 0, -18, -25)
+[node name="DoorLightPulse" type="Sprite2D" parent="."]
+material = SubResource("CanvasItemMaterial_door_light")
+position = Vector2(-3, -145)
+scale = Vector2(0.78, 1.12)
+modulate = Color(1, 0.88, 0.55, 0)
+texture = SubResource("GradientTexture2D_door_light")
+z_index = 1
