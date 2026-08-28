@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b3nttdlxw8k55"
-path="res://.godot/imported/bg-bottom.png-bb6d5840e2b926c18783c47e691b0ae9.ctex"
+uid="uid://6ykmus3gdclf"
+path="res://.godot/imported/bg-newsky.png-ae3064fb717b420cb83f21f4c8e65f26.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/backgrounds/bg-bottom.png"
-dest_files=["res://.godot/imported/bg-bottom.png-bb6d5840e2b926c18783c47e691b0ae9.ctex"]
+source_file="res://assets/backgrounds/bg-newsky.png"
+dest_files=["res://.godot/imported/bg-newsky.png-ae3064fb717b420cb83f21f4c8e65f26.ctex"]
 
 [params]
 

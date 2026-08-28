@@ -102,7 +102,7 @@ z_index = -10
 
 [node name="SkySprite" type="Sprite2D" parent="BackgroundParallax/SkyLayer"]
 centered = false
-scale = Vector2(2.0, 2.0)
+scale = Vector2(1.6, 1.6)
 texture = ExtResource("26")
 
 [node name="FarLayer" type="Node2D" parent="BackgroundParallax"]
@@ -126,7 +126,7 @@ z_index = -7
 
 [node name="NearSprite" type="Sprite2D" parent="BackgroundParallax/NearLayer"]
 centered = false
-scale = Vector2(1.85, 1.85)
+scale = Vector2(1.6, 1.6)
 texture = ExtResource("9")
 
 [node name="Graveyard" type="Node2D" parent="."]

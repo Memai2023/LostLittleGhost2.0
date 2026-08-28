@@ -48,10 +48,13 @@ extends Node2D
 ## down the source image, revealing more foreground/ground detail near the
 ## bottom of the viewport at the cost of upper-sky detail. Applied
 ## identically to all layers, so the stack stays vertically locked together.
-## 0.55 keeps bg-far's moon (measured at 19.6%-25% of image height) fully in
-## frame while still showing most of the Near layer's dense foreground band
-## (measured starting at ~75% of image height in the original bg-near.png).
-@export_range(0.0, 1.0) var vertical_anchor_fraction: float = 0.55
+## 0.5 (true center): at the Sky/Near layers' current 1.6 scale, the 682px
+## source only renders 1091.2px tall against a 1080px viewport -- ~11px of
+## total vertical slack, split ~5.6px above/below center. Any fraction
+## further from 0.5 than that exceeds the available slack and opens a gap
+## at the top or bottom of the screen, so 0.5 is the only value with margin
+## on both sides at this scale.
+@export_range(0.0, 1.0) var vertical_anchor_fraction: float = 0.5
 
 ## Independent per-layer scroll_scale (fraction of the camera's own apparent
 ## motion shown on screen). Sky: virtually imperceptible. Far: slow,
