@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cbmgmvcisp2cg"
-path="res://.godot/imported/bg-bottom.png-bb6d5840e2b926c18783c47e691b0ae9.ctex"
+uid="uid://cblk5rcoeei5w"
+path="res://.godot/imported/bg-newbottom-smooth-horizon.png-6ad9c6f8c43a8b970f1cce8ad4b010d3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/backgrounds/bg-bottom.png"
-dest_files=["res://.godot/imported/bg-bottom.png-bb6d5840e2b926c18783c47e691b0ae9.ctex"]
+source_file="res://assets/backgrounds/bg-newbottom-smooth-horizon.png"
+dest_files=["res://.godot/imported/bg-newbottom-smooth-horizon.png-6ad9c6f8c43a8b970f1cce8ad4b010d3.ctex"]
 
 [params]
 

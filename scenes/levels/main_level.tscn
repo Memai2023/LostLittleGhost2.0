@@ -1,4 +1,4 @@
-[gd_scene load_steps=48 format=3]
+[gd_scene load_steps=49 format=3]
 
 [ext_resource type="Script" path="res://scripts/systems/background_scroller.gd" id="10"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/ghost_hunter.tscn" id="1"]
@@ -25,6 +25,7 @@
 [ext_resource type="PackedScene" path="res://scenes/items/transparent_caster.tscn" id="24"]
 [ext_resource type="Texture2D" path="res://assets/characters/ghost/ghost_good_idle_front.png" id="25"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/bg-sky.png" id="26"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/bg-near.png" id="27"]
 
 [sub_resource type="RectangleShape2D" id="Scene1ShapeASmall"]
 size = Vector2(617, 70)
@@ -106,7 +107,8 @@ scale = Vector2(1.6, 1.6)
 texture = ExtResource("26")
 
 [node name="FarLayer" type="Node2D" parent="BackgroundParallax"]
-z_index = -9
+visible = false
+z_index = -11
 
 [node name="FarSprite" type="Sprite2D" parent="BackgroundParallax/FarLayer"]
 centered = false
@@ -118,8 +120,16 @@ z_index = -8
 
 [node name="MidSprite" type="Sprite2D" parent="BackgroundParallax/MidLayer"]
 centered = false
-scale = Vector2(2.0, 2.0)
+scale = Vector2(1.6, 1.6)
 texture = ExtResource("8")
+
+[node name="HorizonLayer" type="Node2D" parent="BackgroundParallax"]
+z_index = -9
+
+[node name="HorizonSprite" type="Sprite2D" parent="BackgroundParallax/HorizonLayer"]
+centered = false
+scale = Vector2(1.6, 1.6)
+texture = ExtResource("9")
 
 [node name="NearLayer" type="Node2D" parent="BackgroundParallax"]
 z_index = -7
@@ -127,7 +137,7 @@ z_index = -7
 [node name="NearSprite" type="Sprite2D" parent="BackgroundParallax/NearLayer"]
 centered = false
 scale = Vector2(1.6, 1.6)
-texture = ExtResource("9")
+texture = ExtResource("27")
 
 [node name="Graveyard" type="Node2D" parent="."]
 
