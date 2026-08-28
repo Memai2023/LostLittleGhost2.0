@@ -1,4 +1,4 @@
-[gd_scene load_steps=52 format=3]
+[gd_scene load_steps=53 format=3]
 
 [ext_resource type="Script" path="res://scripts/systems/background_scroller.gd" id="10"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/ghost_hunter.tscn" id="1"]
@@ -9,7 +9,7 @@
 [ext_resource type="Script" path="res://scripts/systems/fall_zone.gd" id="6"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/bg-far.png" id="7"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/bg-mid.png" id="8"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/bg-near.png" id="9"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/bg-bottom.png" id="9"]
 [ext_resource type="Texture2D" path="res://assets/characters/platform/pl-grave.png" id="12"]
 [ext_resource type="Texture2D" path="res://assets/characters/platform/pl-stone.png" id="13"]
 [ext_resource type="Texture2D" path="res://assets/characters/platform/pl-fence.png" id="14"]
@@ -24,6 +24,7 @@
 [ext_resource type="Texture2D" path="res://assets/characters/platform/pl-log.png" id="23"]
 [ext_resource type="PackedScene" path="res://scenes/items/transparent_caster.tscn" id="24"]
 [ext_resource type="Texture2D" path="res://assets/characters/ghost/ghost_good_idle_front.png" id="25"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/bg-sky.png" id="26"]
 
 [sub_resource type="RectangleShape2D" id="Scene1ShapeASmall"]
 size = Vector2(617, 70)
@@ -111,6 +112,14 @@ size = Vector2(10600, 300)
 [node name="BackgroundParallax" type="Node2D" parent="."]
 script = ExtResource("10")
 
+[node name="SkyLayer" type="Node2D" parent="BackgroundParallax"]
+z_index = -10
+
+[node name="SkySprite" type="Sprite2D" parent="BackgroundParallax/SkyLayer"]
+centered = false
+scale = Vector2(2.0, 2.0)
+texture = ExtResource("26")
+
 [node name="FarLayer" type="Node2D" parent="BackgroundParallax"]
 z_index = -9
 
@@ -132,15 +141,10 @@ z_index = -7
 
 [node name="NearSprite" type="Sprite2D" parent="BackgroundParallax/NearLayer"]
 centered = false
-scale = Vector2(2.0, 2.0)
+scale = Vector2(1.85, 1.85)
 texture = ExtResource("9")
 
 [node name="Graveyard" type="Node2D" parent="."]
-
-[node name="Background" type="Polygon2D" parent="Graveyard"]
-z_index = -10
-color = Color(0.04, 0.06, 0.16, 1)
-polygon = PackedVector2Array(0, -500, 3070, -500, 3070, 1450, 0, 1450)
 
 [node name="AreaLabel" type="Label" parent="Graveyard"]
 position = Vector2(50, -250)
@@ -294,11 +298,6 @@ z_index = -1
 texture = ExtResource("17")
 
 [node name="HauntedWoods" type="Node2D" parent="."]
-
-[node name="Background" type="Polygon2D" parent="HauntedWoods"]
-z_index = -10
-color = Color(0.1, 0.04, 0.14, 1)
-polygon = PackedVector2Array(3070, -500, 6150, -500, 6150, 1450, 3070, 1450)
 
 [node name="AreaLabel" type="Label" parent="HauntedWoods"]
 position = Vector2(3120, -250)
@@ -529,11 +528,6 @@ z_index = -1
 texture = ExtResource("17")
 
 [node name="HauntedHouseGrounds" type="Node2D" parent="."]
-
-[node name="Background" type="Polygon2D" parent="HauntedHouseGrounds"]
-z_index = -10
-color = Color(0.16, 0.08, 0.11, 1)
-polygon = PackedVector2Array(6150, -500, 10200, -500, 10200, 1450, 6150, 1450)
 
 [node name="AreaLabel" type="Label" parent="HauntedHouseGrounds"]
 position = Vector2(6200, -250)
