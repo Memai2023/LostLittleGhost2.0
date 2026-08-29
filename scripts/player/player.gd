@@ -231,16 +231,16 @@ func _apply_front_pose() -> void:
 	$GoodGhostSprite.flip_h = false
 
 
-# The airborne (jump/fall) pose. Treated as a centered/front-facing
-# expression rather than a directional one, matching how it was already
-# drawn — flip_h stays false regardless of facing direction.
+# The airborne (jump/fall) pose. Directional like the side pose: flips to
+# match facing_direction so a jump/double-jump made while moving (or last
+# moved) left visibly faces left instead of always facing right.
 func _apply_surprise_pose() -> void:
 	if current_pose != POSE_SURPRISE:
 		current_pose = POSE_SURPRISE
 		$GoodGhostSprite.texture = surprise_texture
 		$GoodGhostSprite.scale = SURPRISE_SCALE
 		$GoodGhostSprite.position = SURPRISE_POSITION
-	$GoodGhostSprite.flip_h = false
+	$GoodGhostSprite.flip_h = facing_direction < 0
 
 
 # Called by Good Spirit Orbs on collection, regardless of whether SOUL was
