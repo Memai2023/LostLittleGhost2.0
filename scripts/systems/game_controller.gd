@@ -7,6 +7,13 @@ const DOOR_BRIGHTEN_DURATION := 0.28
 const GLOW_FADE_IN_DURATION := 0.35
 const GHOST_SWAP_DURATION := 0.45
 const HOLD_DURATION := 1.0
+# Player walking into the foreground EndPortal, before the ghost is shown at
+# the background house doorway. Kept short -- it's a final step-in, not a
+# separate cutscene beat.
+const PLAYER_ENTER_PORTAL_DURATION := 0.4
+# ArrivalGhost's small settle-in slide (offset -> exact HouseDoorTarget
+# position), run in parallel with its own fade-in.
+const GHOST_ARRIVE_OFFSET := Vector2(0, -24)
 
 var _ending_triggered: bool = false
 
@@ -40,6 +47,8 @@ func _run_arrival_sequence() -> void:
 	var end_portal: Node = get_tree().get_first_node_in_group("end_portal")
 	var house_glow: Node = get_tree().get_first_node_in_group("house_doorway_glow")
 	var arrival_ghost: Node = get_tree().get_first_node_in_group("arrival_ghost")
+	var portal_entry_target: Node2D = get_tree().get_first_node_in_group("portal_entry_target")
+	var house_door_target: Node2D = get_tree().get_first_node_in_group("house_door_target")
 
 	# Pulse the soft light centered inside the door artwork. This replaces the
 	# old solid Polygon2D placeholder, so no geometric circle sits over the art.
@@ -72,31 +81,51 @@ func _run_arrival_sequence() -> void:
 
 	var tween := create_tween()
 
-	# Phase 1: warm glow fades in over the painted house doorway.
+	# Phase 0: the world-space player steps fully into the foreground portal.
+	# This only ever tweens the player's own global_position -- it never
+	# joins the parallax hierarchy. The camera is already frozen (see
+	# player.stop_for_ending()/_lock_camera_for_ending()), so this movement
+	# doesn't drag the background framing along with it.
+	if player != null and portal_entry_target != null:
+		tween.tween_property(player, "global_position", portal_entry_target.global_position, PLAYER_ENTER_PORTAL_DURATION)
+	else:
+		tween.tween_interval(PLAYER_ENTER_PORTAL_DURATION)
+
+	# Phase 1: the normal ghost fades out now that it has reached the portal.
+	if player != null and player.has_node("GoodGhostSprite"):
+		tween.tween_property(player.get_node("GoodGhostSprite"), "modulate:a", 0.0, GHOST_SWAP_DURATION)
+	else:
+		tween.tween_interval(GHOST_SWAP_DURATION)
+	tween.tween_callback(_hide_player_visual.bind(player))
+
+	# Phase 2: warm glow fades in over the painted house doorway, while
+	# ArrivalGhost appears just above HouseDoorTarget and settles exactly
+	# onto it -- both together, at the destination side of the ending.
+	var phase2_started := false
 	if house_glow != null:
 		house_glow.visible = true
 		house_glow.modulate.a = 0.0
-		tween.tween_property(house_glow, "modulate:a", 0.9, GLOW_FADE_IN_DURATION)
-	else:
-		tween.tween_interval(GLOW_FADE_IN_DURATION)
-
-	# Phase 2: normal ghost fades out while the small glowing ghost fades in
-	# at the house entrance, together.
-	var swap_started := false
-	if player != null and player.has_node("GoodGhostSprite"):
-		tween.tween_property(player.get_node("GoodGhostSprite"), "modulate:a", 0.0, GHOST_SWAP_DURATION)
-		swap_started = true
+		if phase2_started:
+			tween.parallel().tween_property(house_glow, "modulate:a", 0.9, GLOW_FADE_IN_DURATION)
+		else:
+			tween.tween_property(house_glow, "modulate:a", 0.9, GLOW_FADE_IN_DURATION)
+		phase2_started = true
 	if arrival_ghost != null:
+		var landing_position: Vector2 = (
+			house_door_target.global_position if house_door_target != null
+			else arrival_ghost.global_position
+		)
+		arrival_ghost.global_position = landing_position + GHOST_ARRIVE_OFFSET
 		arrival_ghost.visible = true
 		arrival_ghost.modulate.a = 0.0
-		if swap_started:
+		if phase2_started:
 			tween.parallel().tween_property(arrival_ghost, "modulate:a", 1.0, GHOST_SWAP_DURATION)
 		else:
 			tween.tween_property(arrival_ghost, "modulate:a", 1.0, GHOST_SWAP_DURATION)
-		swap_started = true
-	if not swap_started:
-		tween.tween_interval(GHOST_SWAP_DURATION)
-	tween.tween_callback(_hide_player_visual.bind(player))
+		tween.parallel().tween_property(arrival_ghost, "global_position", landing_position, GHOST_SWAP_DURATION)
+		phase2_started = true
+	if not phase2_started:
+		tween.tween_interval(GLOW_FADE_IN_DURATION)
 
 	# Phase 3: brief hold on the arrival image, then complete.
 	tween.tween_interval(HOLD_DURATION)

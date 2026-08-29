@@ -89,6 +89,7 @@ var is_showing_good_orb_reaction: bool = false
 var is_showing_crying: bool = false
 var is_stealthed: bool = false
 var is_ending: bool = false
+var _ending_camera_frozen_position: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
@@ -116,7 +117,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if is_ending:
-		_lock_camera_vertical()
+		_lock_camera_for_ending()
 		return
 
 	if is_respawning:
@@ -143,6 +144,18 @@ func _physics_process(delta: float) -> void:
 # parent-following + smoothing, exactly as before.
 func _lock_camera_vertical() -> void:
 	$Camera2D.position.y = CAMERA_FIXED_Y - global_position.y
+
+
+# Holds the camera at exactly the world position it had the moment the
+# ending started (see stop_for_ending()), regardless of any subsequent
+# player movement -- e.g. the portal-entry tween in game_controller.gd
+# animating global_position toward PortalEntryTarget. Camera2D is a child of
+# the player, so its global_position has to be re-asserted every frame to
+# counteract the parent transform change; this keeps the ending framing
+# completely still instead of drifting the background/foreground alignment
+# players already saw when the portal activated.
+func _lock_camera_for_ending() -> void:
+	$Camera2D.global_position = _ending_camera_frozen_position
 
 
 func _apply_gravity(delta: float) -> void:
@@ -313,6 +326,7 @@ func set_respawn_position(new_respawn_position: Vector2) -> void:
 func stop_for_ending() -> void:
 	is_ending = true
 	velocity = Vector2.ZERO
+	_ending_camera_frozen_position = $Camera2D.global_position
 
 
 # Called by Transparent Caster pickups. Makes the ghost undetectable to

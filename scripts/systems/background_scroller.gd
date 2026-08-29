@@ -15,19 +15,21 @@ extends Node2D
 ## (camera_end_x) pans every layer fully right (each layer's own right edge
 ## meets the viewport's right edge).
 ##
-## The parallax itself comes purely from each layer's own rendered width:
-## Sky and Horizon are 2048x682 @ 1.6 (rendered 3276.8 wide); Mid is
-## 3200x682 @ 1.6 (rendered 5120 wide); Near is 3600x682 @ 1.6 (rendered
-## 5760 wide). Panning a wider texture across the same [0, 1] progress over
-## the same level distance means it has to cover more screen-relative
-## ground per unit of camera movement -- so Near (widest) visibly outpaces
-## Mid, which outpaces Sky/Horizon (equal width, so equal speed), with no
-## separate per-layer curve or offset needed. A previous version added a
-## sin(PI * progress) depth wobble on top of a shared progress to fake this
-## with same-width source art; now that Mid/Near are genuinely wider than
-## Sky/Horizon, that wobble is gone -- width alone drives the speed
-## difference, and the ordering can't reverse partway through the level the
-## way the old sine curve did.
+## The parallax speed difference comes from TWO combined sources:
+## 1. Each layer's own rendered width (wider textures cover more
+##    screen-relative ground per unit of shared progress).
+## 2. A per-layer depth offset applied to a shared sin(PI * progress) curve,
+##    producing a per-layer layer_progress that is DIFFERENT from the base
+##    level progress (see _panorama_depths / _update_panorama below). This
+##    is what makes Sky/Horizon -- which share the same rendered width --
+##    move at different speeds from one another, and is also why Near
+##    visibly outpaces Mid by more than width alone would produce.
+##
+## Each depth is kept small enough (|depth| < 1/pi =~ 0.318) that
+## d/dprogress (progress + depth*sin(PI*progress)) = 1 + depth*PI*cos(PI*progress)
+## stays positive across the whole [0, 1] range -- layer_progress is
+## strictly monotonic for every layer, so the ordering can never reverse
+## partway through the level.
 ##
 ## None of the four tiles, mirrors, wraps, or re-anchors -- the source art
 ## isn't a repeatable pattern, so panning across each texture once, exactly
@@ -61,6 +63,24 @@ extends Node2D
 ## shown on screen), still used by the disabled Far layer only.
 @export var far_scroll_scale: float = 0.20
 
+## Per-layer depth offsets applied on top of the shared sin(PI * progress)
+## curve (see _panorama_depths / _update_panorama). Negative = slower than
+## the base progress, positive = faster. Magnitudes stay below 1/pi so
+## layer_progress is always monotonic (no reversal).
+@export var sky_parallax_depth: float = -0.12
+@export var horizon_parallax_depth: float = -0.03
+@export var mid_parallax_depth: float = 0.12
+@export var near_parallax_depth: float = 0.30
+
+## Target screen-space X (0 = viewport left edge, viewport width = right
+## edge) that MidSprite/HouseDoorTarget is shifted toward as the player
+## nears the door, so the background house doorway and the foreground
+## EndPortal read as two distinct, simultaneously-visible destinations
+## instead of overlapping. Fades in only across the level's final
+## (1.0 - house_reveal_start) fraction.
+@export var house_target_screen_x: float = 1500.0
+@export_range(0.0, 1.0) var house_reveal_start: float = 0.82
+
 # Far -- the one remaining clamped/section-anchored layer (currently
 # invisible).
 @onready var _layers: Array[Sprite2D] = [
@@ -68,7 +88,8 @@ extends Node2D
 ]
 
 # Sky, Horizon, Mid, Near -- the synchronized single-composition layers,
-# back to front.
+# back to front. Index order is shared with _panorama_depths and
+# _panorama_widths below.
 @onready var _panorama_sprites: Array[Sprite2D] = [
 	$SkyLayer/SkySprite,
 	$HorizonLayer/HorizonSprite,
@@ -76,11 +97,27 @@ extends Node2D
 	$NearLayer/NearSprite,
 ]
 
+const _MID_PANORAMA_INDEX := 2
+
 var _camera: Camera2D = null
 var _viewport_size: Vector2 = Vector2.ZERO
 var _layer_sizes: Array[Vector2] = []
 var _scroll_scales: Array[float] = []
 var _panorama_widths: Array[float] = []
+var _panorama_depths: Array[float] = []
+
+# Marker2D child of MidSprite placed exactly on the painted house doorway
+# (see main_level.tscn, group "house_door_target"). Used both to derive
+# _mid_house_shift below and, at the ending, as the exact landing point for
+# ArrivalGhost.
+var _house_door_target: Marker2D = null
+
+# Constant extra rightward shift applied to MidSprite's screen-relative X
+# (faded in via house_reveal_start) so that, once fully faded in,
+# _house_door_target sits at house_target_screen_x on screen. Derived once
+# in _ready() from the marker's actual local position, MidSprite's scale,
+# Mid's rendered width and the viewport size -- never hardcoded.
+var _mid_house_shift: float = 0.0
 
 var _current_section: int = 0
 # Per-layer anchor: this layer's own world x, and the camera's world x, at
@@ -105,6 +142,28 @@ func _ready() -> void:
 
 	for sprite in _panorama_sprites:
 		_panorama_widths.append(sprite.texture.get_width() * absf(sprite.scale.x))
+
+	_panorama_depths = [
+		sky_parallax_depth,
+		horizon_parallax_depth,
+		mid_parallax_depth,
+		near_parallax_depth,
+	]
+
+	var mid_sprite: Sprite2D = _panorama_sprites[_MID_PANORAMA_INDEX]
+	_house_door_target = mid_sprite.get_node("HouseDoorTarget")
+
+	var mid_rendered_width: float = _panorama_widths[_MID_PANORAMA_INDEX]
+	# screen_relative_x MidSprite would sit at once its own layer_progress
+	# reaches 1.0, with no house shift applied yet.
+	var mid_full_screen_relative: float = _viewport_size.x * 0.5 - mid_rendered_width
+	# HouseDoorTarget's screen-relative X at that same moment (its local
+	# position is scaled by MidSprite's own scale, same as any other child).
+	var door_screen_relative_at_full: float = (
+		mid_full_screen_relative + _house_door_target.position.x * mid_sprite.scale.x
+	)
+	var target_screen_relative: float = house_target_screen_x - _viewport_size.x * 0.5
+	_mid_house_shift = target_screen_relative - door_screen_relative_at_full
 
 
 func _process(_delta: float) -> void:
@@ -136,44 +195,53 @@ func _process(_delta: float) -> void:
 	_update_panorama(camera_pos)
 
 
-# Drives Sky, Horizon, Mid and Near from one shared level progress -- no
-# per-layer curve or offset. progress 0 at camera_start_x pans every layer
+# Drives Sky, Horizon, Mid and Near from one shared base level progress, but
+# each layer is positioned using its OWN layer_progress -- base progress
+# warped by that layer's depth against a shared sin(PI * progress) curve
+# (see _panorama_depths). progress 0 at camera_start_x pans every layer
 # fully left (each layer's own left edge meets the viewport's left edge);
 # progress 1 at camera_end_x pans every layer fully right (each layer's own
-# right edge meets the viewport's right edge). The parallax speed
-# difference comes entirely from each layer's own rendered width -- see
-# _position_panorama_layer(). No clamping, section-anchoring, or looping.
+# right edge meets the viewport's right edge). No clamping to a single
+# shared position, no section-anchoring, no looping.
 func _update_panorama(camera_pos: Vector2) -> void:
 	var progress: float = clampf(
 		(camera_pos.x - camera_start_x) / (camera_end_x - camera_start_x), 0.0, 1.0
 	)
+	var depth_curve: float = sin(PI * progress)
 
 	for i in _panorama_sprites.size():
-		_position_panorama_layer(_panorama_sprites[i], _panorama_widths[i], progress, camera_pos)
+		var layer_progress: float = clampf(progress + _panorama_depths[i] * depth_curve, 0.0, 1.0)
+		var extra_shift: float = 0.0
+		if i == _MID_PANORAMA_INDEX:
+			extra_shift = _mid_house_shift * smoothstep(house_reveal_start, 1.0, progress)
+		_position_panorama_layer(_panorama_sprites[i], _panorama_widths[i], layer_progress, extra_shift, camera_pos)
 
 
 # Shared positioning helper for every panorama layer (Sky/Horizon/Mid/Near).
 # Sprites are top-left anchored (centered = false), so global_position.x
 # directly IS the sprite's own left edge -- no size-based recentering
-# needed. At progress=0, screen_relative_x = -viewport_width/2, i.e. this
-# layer's left edge sits exactly at the viewport's left edge. At progress=1,
-# screen_relative_x = viewport_width/2 - rendered_width, i.e. this layer's
-# right edge (left edge + rendered_width) sits exactly at the viewport's
-# right edge. A wider rendered_width makes that second value more negative,
-# so wider layers travel further in screen-relative terms over the same
-# progress range -- that's the entire parallax mechanism; no per-layer
-# speed constant is needed. (All four layers currently render well over
-# viewport width, so the right-edge endpoint is always negative -- coverage
-# holds throughout; this stops being true only if a layer were ever made
-# narrower than the viewport, which none are.)
+# needed. At layer_progress=0, screen_relative_x = -viewport_width/2, i.e.
+# this layer's left edge sits exactly at the viewport's left edge. At
+# layer_progress=1, screen_relative_x = viewport_width/2 - rendered_width,
+# i.e. this layer's right edge (left edge + rendered_width) sits exactly at
+# the viewport's right edge. Passing each layer its OWN layer_progress
+# (rather than one shared progress) is what makes each depth value actually
+# reach the final sprite position -- rendered_width alone no longer carries
+# the whole speed difference. extra_shift (nonzero for Mid only, once the
+# player nears the door) is added before the coverage clamp, so the ending
+# house-reveal shift can never open a gap at either viewport edge.
 func _position_panorama_layer(
-	sprite: Sprite2D, rendered_width: float, progress: float, camera_pos: Vector2
+	sprite: Sprite2D, rendered_width: float, layer_progress: float, extra_shift: float, camera_pos: Vector2
 ) -> void:
 	var screen_relative_x: float = lerpf(
-		-_viewport_size.x * 0.5, _viewport_size.x * 0.5 - rendered_width, progress
+		-_viewport_size.x * 0.5, _viewport_size.x * 0.5 - rendered_width, layer_progress
 	)
 
-	var x: float = camera_pos.x + screen_relative_x
+	var x: float = camera_pos.x + screen_relative_x + extra_shift
+	var min_x: float = camera_pos.x + _viewport_size.x * 0.5 - rendered_width
+	var max_x: float = camera_pos.x - _viewport_size.x * 0.5
+	x = clampf(x, min_x, max_x)
+
 	var y: float = camera_pos.y - sprite.texture.get_height() * absf(sprite.scale.y) * vertical_anchor_fraction
 
 	sprite.global_position = Vector2(x, y)

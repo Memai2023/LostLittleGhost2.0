@@ -8,7 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/items/end_portal.tscn" id="5"]
 [ext_resource type="Script" path="res://scripts/systems/fall_zone.gd" id="6"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/bg-far.png" id="7"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/bg-mid.png" id="8"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/bg-mid-wide.png" id="8"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/bg-bottom.png" id="9"]
 [ext_resource type="Texture2D" path="res://assets/characters/platform/pl-grave.png" id="12"]
 [ext_resource type="Texture2D" path="res://assets/characters/platform/pl-stone.png" id="13"]
@@ -25,7 +25,7 @@
 [ext_resource type="PackedScene" path="res://scenes/items/transparent_caster.tscn" id="24"]
 [ext_resource type="Texture2D" path="res://assets/characters/ghost/ghost_good_idle_front.png" id="25"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/bg-sky.png" id="26"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/bg-near.png" id="27"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/bg-near-wide.png" id="27"]
 
 [sub_resource type="RectangleShape2D" id="Scene1ShapeASmall"]
 size = Vector2(617, 70)
@@ -79,7 +79,7 @@ size = Vector2(300, 70)
 size = Vector2(430, 70)
 
 [sub_resource type="RectangleShape2D" id="Scene3ShapeUpper2"]
-size = Vector2(220, 70)
+size = Vector2(380, 70)
 
 [sub_resource type="RectangleShape2D" id="Scene3ShapeHunterGround"]
 size = Vector2(340, 70)
@@ -276,7 +276,7 @@ scale = Vector2(0.158, 0.158)
 texture = ExtResource("13")
 
 [node name="GhostHunter" parent="Graveyard" instance=ExtResource("1")]
-position = Vector2(3065, 890)
+position = Vector2(3120, 890)
 patrol_speed = 60.0
 patrol_distance = 90.0
 cone_length = 280.0
@@ -537,7 +537,7 @@ texture = ExtResource("22")
 position = Vector2(7250, 884.5)
 
 [node name="EvilOrb1" parent="HauntedHouseGrounds" instance=ExtResource("3")]
-position = Vector2(7490, 750)
+position = Vector2(7520, 802)
 
 [node name="Visual" parent="HauntedHouseGrounds/EvilOrb1"]
 visible = false
@@ -554,7 +554,7 @@ z_index = -1
 texture = ExtResource("17")
 
 [node name="Upper2" type="StaticBody2D" parent="HauntedHouseGrounds"]
-position = Vector2(7580, 845)
+position = Vector2(7520, 845)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HauntedHouseGrounds/Upper2"]
 position = Vector2(0, 35)
@@ -562,7 +562,7 @@ shape = SubResource("Scene3ShapeUpper2")
 
 [node name="Sprite" type="Sprite2D" parent="HauntedHouseGrounds/Upper2"]
 position = Vector2(0, 15.4)
-scale = Vector2(0.124, 0.124)
+scale = Vector2(0.2142, 0.124)
 texture = ExtResource("16")
 
 [node name="Hunter1_Ground" type="StaticBody2D" parent="HauntedHouseGrounds"]
@@ -652,8 +652,14 @@ texture = ExtResource("17")
 [node name="EndPortal" parent="HauntedHouseGrounds" instance=ExtResource("5")]
 position = Vector2(9780, 940)
 
+[node name="PortalEntryTarget" type="Marker2D" parent="HauntedHouseGrounds/EndPortal" groups=["portal_entry_target"]]
+position = Vector2(0, -140)
+
+[node name="HouseDoorTarget" type="Marker2D" parent="BackgroundParallax/MidLayer/MidSprite" groups=["house_door_target"]]
+position = Vector2(2736, 502)
+
 [node name="HouseDoorwayGlow" type="Node2D" parent="BackgroundParallax/MidLayer/MidSprite" groups=["house_doorway_glow"]]
-position = Vector2(1941, 528)
+position = Vector2(2736, 502)
 visible = false
 z_index = 1
 
@@ -666,7 +672,7 @@ color = Color(1, 0.9, 0.6, 0.55)
 polygon = PackedVector2Array(30, 0, 21.2, 21.2, 0, 30, -21.2, 21.2, -30, 0, -21.2, -21.2, 0, -30, 21.2, -21.2)
 
 [node name="ArrivalGhost" type="Node2D" parent="BackgroundParallax/MidLayer/MidSprite" groups=["arrival_ghost"]]
-position = Vector2(1941, 528)
+position = Vector2(2736, 502)
 scale = Vector2(0.5, 0.5)
 visible = false
 z_index = 2
