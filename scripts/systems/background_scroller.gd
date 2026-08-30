@@ -67,8 +67,8 @@ extends Node2D
 ## curve (see _panorama_depths / _update_panorama). Negative = slower than
 ## the base progress, positive = faster. Magnitudes stay below 1/pi so
 ## layer_progress is always monotonic (no reversal).
-@export var sky_parallax_depth: float = -0.12
-@export var horizon_parallax_depth: float = -0.03
+@export var sky_parallax_depth: float = -0.17
+@export var horizon_parallax_depth: float = -0.06
 @export var mid_parallax_depth: float = 0.12
 @export var near_parallax_depth: float = 0.30
 
@@ -98,6 +98,17 @@ extends Node2D
 ]
 
 const _MID_PANORAMA_INDEX := 2
+
+# Static-color safety net behind SkyLayer (see main_level.tscn,
+# BackgroundParallax/SkyFallback/Fill) -- a plain camera-following quad, sized
+# with generous overscan, so the engine's own clear color can never show
+# through even in a hypothetical single-frame coverage gap the panorama
+# layers' own clamp doesn't already account for. Never covers or replaces the
+# real artwork -- it sits at a lower z_index than every real layer (see the
+# node's z_index in the scene) and only matters if something is already
+# failing to cover the viewport.
+const _FALLBACK_OVERSCAN := 1.5
+@onready var _sky_fallback: Polygon2D = $SkyFallback/Fill
 
 var _camera: Camera2D = null
 var _viewport_size: Vector2 = Vector2.ZERO
@@ -165,6 +176,14 @@ func _ready() -> void:
 	var target_screen_relative: float = house_target_screen_x - _viewport_size.x * 0.5
 	_mid_house_shift = target_screen_relative - door_screen_relative_at_full
 
+	var fallback_size: Vector2 = _viewport_size * _FALLBACK_OVERSCAN
+	_sky_fallback.polygon = PackedVector2Array([
+		Vector2.ZERO,
+		Vector2(fallback_size.x, 0.0),
+		fallback_size,
+		Vector2(0.0, fallback_size.y),
+	])
+
 
 func _process(_delta: float) -> void:
 	if _camera == null:
@@ -172,8 +191,24 @@ func _process(_delta: float) -> void:
 		if _camera == null:
 			return
 
-	var camera_pos: Vector2 = _camera.global_position
+	# get_screen_center_position() (NOT global_position) is what actually
+	# feeds the rendered view: global_position is the Camera2D node's raw
+	# transform and snaps instantly to wherever its parent (the player)
+	# currently is, completely ignoring position_smoothing -- while the
+	# viewport visually still eases toward that position over several
+	# frames. Using global_position here positioned every layer around
+	# where the camera was ABOUT to be rather than where it was actually
+	# rendering, so during any fast camera movement (jumps, direction
+	# reversals, deceleration) the two diverge -- by over 1000px in testing
+	# with this project's position_smoothing_speed -- and the background
+	# ends up clamped to cover the wrong region entirely, exposing the
+	# viewport's clear color on whichever edge the true (lagging) camera
+	# had not caught up to yet. This was the verified cause of the
+	# intermittent grey viewport-edge strip.
+	var camera_pos: Vector2 = _camera.get_screen_center_position()
 	_update_section(camera_pos.x)
+
+	$SkyFallback.global_position = camera_pos - _viewport_size * _FALLBACK_OVERSCAN * 0.5
 
 	var traveled_in_section: float = camera_pos.x - _section_anchor_camera_x
 

@@ -2,6 +2,8 @@ extends CharacterBody2D
 
 signal soul_changed(current_soul: int, max_soul: int)
 signal soul_depleted
+signal superpower_activated
+signal superpower_deactivated
 
 enum RespawnCause { SOUL_CORRUPTION, FALL_DEATH }
 
@@ -306,6 +308,10 @@ func _apply_gravity(delta: float) -> void:
 func _handle_jump() -> void:
 	if Input.is_action_just_pressed("jump") and jump_count < MAX_JUMPS:
 		velocity.y = jump_velocity
+		if jump_count == 0:
+			$JumpSFX.play()
+		else:
+			$DoubleJumpSFX.play()
 		jump_count += 1
 
 
@@ -434,6 +440,21 @@ func show_portal_pose() -> void:
 	$GoodGhostSprite.material = _portal_outline_material
 	_play_portal_pop_tween()
 	$PortalPoseTimer.start()
+
+
+# Called by checkpoint.gd alongside show_portal_pose(), once per checkpoint
+# activation (checkpoint.gd's own _activated guard ensures this).
+func play_portal_sound() -> void:
+	$PortalEnterSFX.play()
+
+
+# Called by good_spirit_orb.gd once collection is confirmed (its own
+# _collected guard ensures this fires at most once per orb). The orb
+# queue_free()s itself immediately after calling this, so the sound plays
+# from the player (which persists) rather than from the orb (which would
+# cut it off mid-playback).
+func play_pure_orb_sound() -> void:
+	$PureOrbSFX.play()
 
 
 # Quick "magical" scale pop played once at the start of the portal pose:
@@ -599,6 +620,8 @@ func activate_stealth() -> void:
 	is_stealthed = true
 	collision_layer = 0
 	$StealthTimer.stop()
+	$SuperpowerSFX.play()
+	superpower_activated.emit()
 	_play_caster_transition()
 
 
@@ -669,6 +692,7 @@ func _on_stealth_timer_timeout() -> void:
 	is_stealthed = false
 	collision_layer = PLAYER_COLLISION_LAYER
 	$GoodGhostSprite.modulate = NORMAL_TINT
+	superpower_deactivated.emit()
 
 
 # Central entry point for any hazard that should corrupt the player's SOUL.
@@ -687,6 +711,7 @@ func take_corruption(amount: int = 1) -> void:
 		_begin_corruption_respawn_sequence()
 		return
 
+	$HurtSFX.play()
 	show_crying_reaction()
 	_start_immunity()
 
@@ -763,6 +788,8 @@ func _on_hit_flash_timer_timeout() -> void:
 # that afterward, since SOUL_CORRUPTION and FALL_DEATH show different
 # pre-respawn sequences.
 func _freeze_for_respawn() -> void:
+	$DeathSFX.play()
+
 	_death_facing_direction = facing_direction
 
 	is_respawning = true

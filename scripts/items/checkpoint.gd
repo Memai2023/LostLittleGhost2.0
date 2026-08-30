@@ -32,6 +32,8 @@ func _on_body_entered(body: Node2D) -> void:
 	# re-enter this Area2D at all).
 	if body.has_method("show_portal_pose"):
 		body.show_portal_pose()
+	if body.has_method("play_portal_sound"):
+		body.play_portal_sound()
 
 	var respawn_position: Vector2 = $RespawnPoint.global_position
 	checkpoint_activated.emit(respawn_position)

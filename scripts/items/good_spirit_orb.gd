@@ -32,4 +32,7 @@ func _on_body_entered(body: Node2D) -> void:
 	if body.has_method("show_good_orb_reaction"):
 		body.show_good_orb_reaction()
 
+	if body.has_method("play_pure_orb_sound"):
+		body.play_pure_orb_sound()
+
 	queue_free()

@@ -1,4 +1,4 @@
-[gd_scene load_steps=51 format=3]
+[gd_scene load_steps=53 format=3]
 
 [ext_resource type="Script" path="res://scripts/systems/background_scroller.gd" id="10"]
 [ext_resource type="Script" path="res://scripts/systems/door_sunrise.gd" id="28"]
@@ -93,7 +93,13 @@ size = Vector2(280, 70)
 size = Vector2(240, 70)
 
 [sub_resource type="RectangleShape2D" id="FallZoneShape"]
-size = Vector2(10600, 300)
+size = Vector2(11400, 300)
+
+[sub_resource type="RectangleShape2D" id="LeftBoundaryShape"]
+size = Vector2(60, 4000)
+
+[sub_resource type="RectangleShape2D" id="RightBoundaryShape"]
+size = Vector2(60, 4000)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_door_sunrise"]
 shader = ExtResource("29")
@@ -102,6 +108,12 @@ shader = ExtResource("29")
 
 [node name="BackgroundParallax" type="Node2D" parent="."]
 script = ExtResource("10")
+
+[node name="SkyFallback" type="Node2D" parent="BackgroundParallax"]
+z_index = -12
+
+[node name="Fill" type="Polygon2D" parent="BackgroundParallax/SkyFallback"]
+color = Color(0.031, 0.082, 0.31, 1)
 
 [node name="SkyLayer" type="Node2D" parent="BackgroundParallax"]
 z_index = -10
@@ -670,6 +682,9 @@ position = Vector2(0, -140)
 [node name="HouseDoorTarget" type="Marker2D" parent="BackgroundParallax/MidLayer/MidSprite" groups=["house_door_target"]]
 position = Vector2(2736, 502)
 
+[node name="HouseDoorArrivalMarker" type="Marker2D" parent="BackgroundParallax/MidLayer/MidSprite" groups=["house_door_arrival_marker"]]
+position = Vector2(2736, 501)
+
 [node name="HouseDoorwayGlow" type="Node2D" parent="BackgroundParallax/MidLayer/MidSprite" groups=["house_doorway_glow"]]
 position = Vector2(2736, 502)
 visible = false
@@ -698,7 +713,7 @@ scale = Vector2(0.15, 0.15)
 texture = ExtResource("25")
 
 [node name="FallZone" type="Area2D" parent="."]
-position = Vector2(4975, 1300)
+position = Vector2(4600, 1300)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
@@ -706,3 +721,15 @@ script = ExtResource("6")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="FallZone"]
 shape = SubResource("FallZoneShape")
+
+[node name="LeftBoundary" type="StaticBody2D" parent="."]
+position = Vector2(-930, 0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LeftBoundary"]
+shape = SubResource("LeftBoundaryShape")
+
+[node name="RightBoundary" type="StaticBody2D" parent="."]
+position = Vector2(9930, 0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RightBoundary"]
+shape = SubResource("RightBoundaryShape")

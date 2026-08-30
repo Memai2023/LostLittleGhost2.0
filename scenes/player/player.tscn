@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=24 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/characters/ghost/ghost_good_idle_right.png" id="2"]
@@ -10,6 +10,18 @@
 [ext_resource type="Texture2D" path="res://assets/characters/ghost/ghost_crying.png" id="8"]
 [ext_resource type="Texture2D" path="res://assets/characters/ghost/ghost_happy.png" id="9"]
 [ext_resource type="Texture2D" path="res://assets/characters/ghost/ghost-portal.png" id="10"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/jump.wav" id="11"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/double_jump.wav" id="12"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/portal_enter.wav" id="13"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/ghost_hurt.wav" id="14"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/ghost_death.wav" id="15"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/superpower_activate.wav" id="16"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/pure_orb_collect.wav" id="17"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/double_jump_air.wav" id="18"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/double_jump_ghost_burst.wav" id="19"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/stealth_ambience.wav" id="20"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/portal.mp3" id="21"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/double-hop.mp3" id="22"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(36, 58)
@@ -41,6 +53,9 @@ texture = ExtResource("2")
 enabled = true
 position_smoothing_enabled = true
 position_smoothing_speed = 5.0
+limit_left = -1860
+limit_right = 10860
+limit_smoothed = false
 
 [node name="ImmunityTimer" type="Timer" parent="."]
 wait_time = 1.0
@@ -72,3 +87,38 @@ one_shot = true
 [node name="PortalPoseTimer" type="Timer" parent="."]
 wait_time = 0.8
 one_shot = true
+
+[node name="JumpSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("11")
+volume_db = -4.0
+bus = &"SFX"
+
+[node name="DoubleJumpSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("22")
+volume_db = -2.0
+bus = &"SFX"
+
+[node name="PortalEnterSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("21")
+volume_db = 0.0
+bus = &"SFX"
+
+[node name="HurtSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("14")
+volume_db = 0.0
+bus = &"SFX"
+
+[node name="DeathSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("15")
+volume_db = 0.0
+bus = &"SFX"
+
+[node name="SuperpowerSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("16")
+volume_db = 1.0
+bus = &"SFX"
+
+[node name="PureOrbSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("17")
+volume_db = 0.0
+bus = &"SFX"
