@@ -23,6 +23,16 @@ func _on_body_entered(body: Node2D) -> void:
 	_activated = true
 	_set_active_appearance()
 
+	# Same moment the portal itself changes appearance -- the body that
+	# actually entered this Area2D reacts with its own portal expression, no
+	# global player lookup needed. _activated above is this checkpoint's own
+	# one-shot guard, so this can only ever fire once per checkpoint: not
+	# while still standing inside it, not on a later re-entry, and not on a
+	# respawn back at an already-activated checkpoint (respawning doesn't
+	# re-enter this Area2D at all).
+	if body.has_method("show_portal_pose"):
+		body.show_portal_pose()
+
 	var respawn_position: Vector2 = $RespawnPoint.global_position
 	checkpoint_activated.emit(respawn_position)
 

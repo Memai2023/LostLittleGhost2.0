@@ -1,6 +1,8 @@
-[gd_scene load_steps=49 format=3]
+[gd_scene load_steps=51 format=3]
 
 [ext_resource type="Script" path="res://scripts/systems/background_scroller.gd" id="10"]
+[ext_resource type="Script" path="res://scripts/systems/door_sunrise.gd" id="28"]
+[ext_resource type="Shader" path="res://assets/shaders/door_sunrise.gdshader" id="29"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/ghost_hunter.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/items/good_spirit_orb.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/items/bad_spirit_orb.tscn" id="3"]
@@ -93,6 +95,9 @@ size = Vector2(240, 70)
 [sub_resource type="RectangleShape2D" id="FallZoneShape"]
 size = Vector2(10600, 300)
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_door_sunrise"]
+shader = ExtResource("29")
+
 [node name="MainLevel" type="Node2D"]
 
 [node name="BackgroundParallax" type="Node2D" parent="."]
@@ -105,6 +110,13 @@ z_index = -10
 centered = false
 scale = Vector2(1.6, 1.6)
 texture = ExtResource("26")
+
+[node name="DoorSunrise" type="Node2D" parent="BackgroundParallax"]
+z_index = -10
+script = ExtResource("28")
+
+[node name="Glow" type="Polygon2D" parent="BackgroundParallax/DoorSunrise"]
+material = SubResource("ShaderMaterial_door_sunrise")
 
 [node name="FarLayer" type="Node2D" parent="BackgroundParallax"]
 visible = false
